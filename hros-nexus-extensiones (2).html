@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS HROS — Sistema de Optimización de Rendimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --obsidian: #070B14;
+  --carbon: #0D1420;
+  --carbon-mid: #111827;
+  --carbon-light: #1A2235;
+  --panel: #0F1929;
+  --panel-hover: #142033;
+  --border: rgba(0,220,255,0.12);
+  --border-glow: rgba(0,220,255,0.35);
+  --cyan: #00DCFF;
+  --cyan-dim: rgba(0,220,255,0.6);
+  --cyan-glow: rgba(0,220,255,0.15);
+  --purple: #B44FFF;
+  --purple-dim: rgba(180,79,255,0.6);
+  --purple-glow: rgba(180,79,255,0.12);
+  --emerald: #00E5A0;
+  --emerald-dim: rgba(0,229,160,0.6);
+  --emerald-glow: rgba(0,229,160,0.12);
+  --amber: #FFB830;
+  --red-alert: #FF4560;
+  --text-primary: #E8F0FF;
+  --text-secondary: rgba(180,195,230,0.7);
+  --text-muted: rgba(120,145,185,0.5);
+  --grid-line: rgba(0,220,255,0.04);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--obsidian);color:var(--text-primary);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.ambient{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+.ambient-1{width:500px;height:500px;top:-100px;left:-100px;background:rgba(0,220,255,0.04);}
+.ambient-2{width:400px;height:400px;bottom:-50px;right:-80px;background:rgba(180,79,255,0.05);}
+.ambient-3{width:300px;height:300px;top:50%;left:50%;background:rgba(0,229,160,0.03);}
+.app-wrapper{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:20px 24px 100px;}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);position:relative;}
+header::after{content:'';position:absolute;bottom:-1px;left:0;width:220px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent);box-shadow:0 0 12px var(--cyan);}
+.logo-group{display:flex;align-items:center;gap:14px;}
+.logo-icon{width:44px;height:44px;border:1.5px solid var(--cyan);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,220,255,0.3),inset 0 0 20px rgba(0,220,255,0.05);animation:logoGlow 3s ease-in-out infinite;}
+@keyframes logoGlow{0%,100%{box-shadow:0 0 20px rgba(0,220,255,0.3),inset 0 0 20px rgba(0,220,255,0.05);}50%{box-shadow:0 0 35px rgba(0,220,255,0.5),inset 0 0 25px rgba(0,220,255,0.1);}}
+.logo-icon svg{width:24px;height:24px;color:var(--cyan);}
+.logo-text h1{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 20px rgba(0,220,255,0.5);}
+.logo-text span{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:2px;}
+.header-meta{display:flex;align-items:center;gap:16px;}
+.date-chip{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-secondary);padding:6px 14px;border:1px solid var(--border);border-radius:4px;background:var(--carbon-light);letter-spacing:1px;}
+.status-dot{display:flex;align-items:center;gap:7px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--emerald);letter-spacing:1px;}
+.status-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 10px var(--emerald);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* NAV TABS */
+.nav-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab-btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:10px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.tab-btn:hover{color:var(--text-secondary);}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);text-shadow:0 0 10px rgba(0,220,255,0.4);}
+
+/* TAB CONTENT */
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.3s ease;}
+.stat-card:hover{border-color:var(--border-glow);background:var(--panel-hover);transform:translateY(-2px);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0;}
+.stat-card.cyan::before{background:linear-gradient(90deg,var(--cyan),transparent);box-shadow:0 0 15px var(--cyan);}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),transparent);box-shadow:0 0 15px var(--purple);}
+.stat-card.emerald::before{background:linear-gradient(90deg,var(--emerald),transparent);box-shadow:0 0 15px var(--emerald);}
+.stat-card.amber::before{background:linear-gradient(90deg,var(--amber),transparent);box-shadow:0 0 15px var(--amber);}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-family:'Orbitron',monospace;font-size:28px;font-weight:700;line-height:1;}
+.stat-card.cyan .stat-value{color:var(--cyan);text-shadow:0 0 20px rgba(0,220,255,0.4);}
+.stat-card.purple .stat-value{color:var(--purple);text-shadow:0 0 20px rgba(180,79,255,0.4);}
+.stat-card.emerald .stat-value{color:var(--emerald);text-shadow:0 0 20px rgba(0,229,160,0.4);}
+.stat-card.amber .stat-value{color:var(--amber);text-shadow:0 0 20px rgba(255,184,48,0.4);}
+.stat-sub{margin-top:5px;font-size:11px;color:var(--text-secondary);}
+
+/* PANEL */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.3s;margin-bottom:16px;}
+.panel:hover{border-color:rgba(0,220,255,0.2);}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,220,255,0.02);}
+.panel-title{display:flex;align-items:center;gap:10px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;}
+.panel-title-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+.panel-body{padding:18px;}
+
+/* ─── SCHEDULE ─── */
+.schedule-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.day-col-hdr{text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-muted);padding:8px 0;text-transform:uppercase;}
+.day-col-hdr.today{color:var(--cyan);text-shadow:0 0 8px rgba(0,220,255,0.5);}
+.schedule-col{display:flex;flex-direction:column;gap:4px;}
+.sched-block{border-radius:6px;padding:6px 8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;position:relative;overflow:hidden;}
+.sched-block:hover{transform:scale(1.02);z-index:2;}
+.sched-block .b-time{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;opacity:0.7;margin-bottom:2px;}
+.sched-block .b-name{font-size:10px;font-weight:700;letter-spacing:0.5px;line-height:1.2;}
+.sched-block .b-tag{font-size:9px;opacity:0.7;margin-top:2px;}
+.sched-block.sleep{background:rgba(120,145,185,0.08);border-left-color:rgba(120,145,185,0.3);color:rgba(120,145,185,0.6);}
+.sched-block.study-hard{background:rgba(180,79,255,0.1);border-left-color:var(--purple);color:var(--purple-dim);}
+.sched-block.study-easy{background:rgba(0,220,255,0.08);border-left-color:var(--cyan);color:var(--cyan-dim);}
+.sched-block.exercise{background:rgba(0,229,160,0.1);border-left-color:var(--emerald);color:var(--emerald-dim);}
+.sched-block.break{background:rgba(255,184,48,0.08);border-left-color:var(--amber);color:rgba(255,184,48,0.6);}
+.sched-block.class{background:rgba(255,69,96,0.08);border-left-color:var(--red-alert);color:rgba(255,69,96,0.7);}
+.sched-block.buffer{background:rgba(120,145,185,0.05);border-left-color:rgba(120,145,185,0.2);color:rgba(120,145,185,0.4);font-style:italic;}
+.sched-block.meal{background:rgba(255,184,48,0.06);border-left-color:rgba(255,184,48,0.3);color:rgba(255,184,48,0.5);}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text-muted);}
+.legend-dot{width:8px;height:8px;border-radius:2px;}
+.legend-dot.sleep{background:rgba(120,145,185,0.3);}
+.legend-dot.study-hard{background:var(--purple);}
+.legend-dot.study-easy{background:var(--cyan);}
+.legend-dot.exercise{background:var(--emerald);}
+.legend-dot.class{background:var(--red-alert);}
+.legend-dot.break{background:var(--amber);}
+.legend-dot.buffer{background:rgba(120,145,185,0.2);}
+.legend-dot.meal{background:rgba(255,184,48,0.4);}
+
+/* ─── WORKOUT ─── */
+.workout-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.workout-day-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.workout-day-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);}
+.workout-day-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;}
+.workout-day-name.emerald{color:var(--emerald);}
+.workout-day-name.cyan{color:var(--cyan);}
+.workout-day-name.purple{color:var(--purple);}
+.workout-day-name.amber{color:var(--amber);}
+.workout-day-type{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text-muted);padding:3px 8px;border:1px solid var(--border);border-radius:3px;}
+.workout-exercises{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.exercise-item{display:flex;align-items:center;gap:10px;}
+.ex-check{width:18px;height:18px;border:1.5px solid var(--border-glow);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0;}
+.ex-check:hover{border-color:var(--emerald);background:rgba(0,229,160,0.1);}
+.ex-check.done{background:var(--emerald);border-color:var(--emerald);color:#000;}
+.ex-check.done::after{content:'✓';font-size:10px;font-weight:700;}
+.ex-info{flex:1;}
+.ex-name{font-size:12px;font-weight:600;color:var(--text-primary);}
+.ex-sets{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px;}
+.ex-muscle{font-size:9px;color:var(--text-muted);padding:2px 6px;border:1px solid var(--border);border-radius:3px;}
+.workout-rest-note{padding:8px 14px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;}
+
+/* ─── STUDY PROTOCOL ─── */
+.subject-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;}
+.subject-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.subj-difficulty{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;margin-bottom:8px;padding:3px 8px;border-radius:3px;display:inline-block;}
+.subj-difficulty.alta{background:rgba(180,79,255,0.15);color:var(--purple);border:1px solid rgba(180,79,255,0.3);}
+.subj-difficulty.baja{background:rgba(0,220,255,0.08);color:var(--cyan);border:1px solid rgba(0,220,255,0.2);}
+.subj-name{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:6px;}
+.subj-technique{font-size:11px;color:var(--text-secondary);margin-bottom:8px;line-height:1.4;}
+.subj-time{display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);}
+.subj-time-dot{width:5px;height:5px;border-radius:50%;}
+
+.technique-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.tech-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.tech-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.tech-card.pomodoro::before{background:linear-gradient(90deg,var(--cyan),transparent);}
+.tech-card.feynman::before{background:linear-gradient(90deg,var(--purple),transparent);}
+.tech-card.spaced::before{background:linear-gradient(90deg,var(--emerald),transparent);}
+.tech-icon{font-size:28px;margin-bottom:10px;}
+.tech-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+.tech-card.pomodoro .tech-name{color:var(--cyan);}
+.tech-card.feynman .tech-name{color:var(--purple);}
+.tech-card.spaced .tech-name{color:var(--emerald);}
+.tech-desc{font-size:11px;color:var(--text-secondary);line-height:1.5;}
+.tech-timer{font-family:'Share Tech Mono',monospace;font-size:9px;margin-top:8px;padding:4px 8px;border-radius:4px;display:inline-block;}
+.tech-card.pomodoro .tech-timer{background:rgba(0,220,255,0.1);color:var(--cyan);border:1px solid rgba(0,220,255,0.2);}
+.tech-card.feynman .tech-timer{background:rgba(180,79,255,0.1);color:var(--purple);border:1px solid rgba(180,79,255,0.2);}
+.tech-card.spaced .tech-timer{background:rgba(0,229,160,0.1);color:var(--emerald);border:1px solid rgba(0,229,160,0.2);}
+
+/* ─── FEEDBACK ─── */
+.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.rating-section{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.rating-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px;}
+.rating-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.rating-label{font-size:12px;color:var(--text-secondary);width:120px;flex-shrink:0;}
+.rating-stars{display:flex;gap:4px;}
+.star{width:22px;height:22px;border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;transition:all 0.15s;color:var(--text-muted);}
+.star:hover,.star.active{background:rgba(255,184,48,0.15);border-color:var(--amber);color:var(--amber);box-shadow:0 0 8px rgba(255,184,48,0.3);}
+.rating-val{font-family:'Orbitron',monospace;font-size:11px;color:var(--amber);margin-left:6px;}
+
+.adjustment-panel{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.adj-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px;}
+.adj-rule{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:8px;border:1px solid var(--border);border-radius:6px;background:rgba(0,220,255,0.02);}
+.adj-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.adj-text{font-size:11px;color:var(--text-secondary);line-height:1.4;}
+.adj-text strong{color:var(--cyan);font-weight:600;}
+
+.synergy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+.synergy-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.syn-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.syn-icon{font-size:18px;}
+.syn-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--cyan);}
+.syn-desc{font-size:11px;color:var(--text-secondary);line-height:1.5;}
+.syn-tip{margin-top:8px;padding:6px 10px;background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.15);border-radius:5px;font-size:10px;color:var(--emerald);}
+
+/* HABIT TRACKER */
+.habits-2col{display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;}
+.habit-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--carbon-light);cursor:pointer;transition:all 0.2s;margin-bottom:6px;}
+.habit-item:hover{border-color:var(--border-glow);transform:translateX(2px);}
+.habit-item.completed{opacity:0.6;}
+.habit-check{width:20px;height:20px;border:1.5px solid var(--border-glow);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all 0.2s;}
+.habit-item.cyan .habit-check{border-color:var(--cyan);}
+.habit-item.emerald .habit-check{border-color:var(--emerald);}
+.habit-item.purple .habit-check{border-color:var(--purple);}
+.habit-item.amber .habit-check{border-color:var(--amber);}
+.habit-item.completed.cyan .habit-check{background:var(--cyan);color:#000;}
+.habit-item.completed.emerald .habit-check{background:var(--emerald);color:#000;}
+.habit-item.completed.purple .habit-check{background:var(--purple);color:#fff;}
+.habit-item.completed.amber .habit-check{background:var(--amber);color:#000;}
+.habit-info{flex:1;min-width:0;}
+.habit-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.habit-meta{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px;}
+.habit-streak{font-size:11px;color:var(--amber);flex-shrink:0;}
+.add-habit-btn{width:100%;padding:8px;background:transparent;border:1px dashed rgba(0,220,255,0.2);border-radius:8px;color:var(--text-muted);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;margin-top:4px;}
+.add-habit-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+/* WEEK DOTS */
+.week-dot-grid{margin-top:8px;}
+.week-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.week-row-name{font-size:10px;color:var(--text-secondary);width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.week-dots-row{display:flex;gap:4px;}
+.wdot{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:1px solid var(--border);color:var(--text-muted);transition:all 0.2s;}
+.wdot.done.cyan{background:rgba(0,220,255,0.15);border-color:var(--cyan);color:var(--cyan);}
+.wdot.done.emerald{background:rgba(0,229,160,0.15);border-color:var(--emerald);color:var(--emerald);}
+.wdot.done.purple{background:rgba(180,79,255,0.15);border-color:var(--purple);color:var(--purple);}
+.wdot.done.amber{background:rgba(255,184,48,0.15);border-color:var(--amber);color:var(--amber);}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(7,11,20,0.95);border-top:1px solid var(--border);backdrop-filter:blur(20px);padding:10px 28px;display:flex;align-items:center;justify-content:space-between;}
+.nav-items{display:flex;gap:4px;}
+.nav-item{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1.5px;padding:8px 14px;border-radius:6px;cursor:pointer;color:var(--text-muted);transition:all 0.2s;text-transform:uppercase;}
+.nav-item:hover{color:var(--text-secondary);background:var(--carbon-light);}
+.nav-item.active{color:var(--cyan);background:rgba(0,220,255,0.08);box-shadow:0 0 15px rgba(0,220,255,0.1);}
+.build-tag{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;}
+
+/* INSIGHT */
+.insight-banner{background:linear-gradient(135deg,rgba(0,220,255,0.05),rgba(180,79,255,0.05));border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.insight-icon{font-size:22px;flex-shrink:0;}
+.insight-text{font-size:13px;color:var(--text-secondary);font-style:italic;line-height:1.5;}
+
+/* Timer widget */
+.pomodoro-widget{background:var(--carbon-light);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;}
+.pom-time{font-family:'Orbitron',monospace;font-size:48px;font-weight:700;color:var(--cyan);text-shadow:0 0 30px rgba(0,220,255,0.4);letter-spacing:4px;margin:10px 0;}
+.pom-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:16px;}
+.pom-buttons{display:flex;gap:8px;justify-content:center;}
+.pom-btn{padding:8px 18px;border-radius:6px;border:1px solid;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.pom-btn.start{background:rgba(0,229,160,0.1);border-color:var(--emerald);color:var(--emerald);}
+.pom-btn.start:hover{background:rgba(0,229,160,0.2);}
+.pom-btn.reset{background:transparent;border-color:var(--border-glow);color:var(--text-muted);}
+.pom-btn.reset:hover{color:var(--text-secondary);}
+.pom-mode-row{display:flex;gap:6px;justify-content:center;margin-bottom:14px;}
+.pom-mode-btn{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-muted);background:transparent;transition:all 0.2s;}
+.pom-mode-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,220,255,0.08);}
+.pom-subject{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--purple);letter-spacing:1px;margin-top:10px;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* ══ MARKETPLACE OVERLAY ══ */
+.mkt-overlay{position:fixed;inset:0;z-index:999;background:rgba(7,11,20,0.92);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;padding:40px 16px 40px;overflow-y:auto;}
+.mkt-overlay.open{display:flex;}
+.mkt-modal{width:100%;max-width:960px;background:var(--carbon);border:1px solid var(--border-glow);border-radius:16px;overflow:hidden;position:relative;}
+.mkt-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);background:rgba(0,220,255,0.03);}
+.mkt-header-left{display:flex;align-items:center;gap:12px;}
+.mkt-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 15px rgba(0,220,255,0.4);}
+.mkt-subtitle{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px;}
+.mkt-close{width:32px;height:32px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.mkt-close:hover{border-color:var(--red-alert);color:var(--red-alert);}
+.mkt-filters{display:flex;gap:6px;padding:14px 24px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.mkt-filter-btn{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.mkt-filter-btn:hover{color:var(--text-secondary);}
+.mkt-filter-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,220,255,0.08);}
+.mkt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:20px 24px;}
+.mkt-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.25s;position:relative;}
+.mkt-card:hover{border-color:rgba(0,220,255,0.25);transform:translateY(-2px);}
+.mkt-card-banner{height:5px;}
+.mkt-card-body{padding:14px;}
+.mkt-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.mkt-card-icon{font-size:26px;line-height:1;}
+.mkt-card-badge{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:3px 7px;border-radius:3px;text-transform:uppercase;}
+.mkt-badge-tab{background:rgba(180,79,255,0.15);color:var(--purple);border:1px solid rgba(180,79,255,0.3);}
+.mkt-badge-widget{background:rgba(0,220,255,0.1);color:var(--cyan);border:1px solid rgba(0,220,255,0.2);}
+.mkt-card-name{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;}
+.mkt-card-desc{font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;}
+.mkt-card-meta{display:flex;align-items:center;justify-content:space-between;}
+.mkt-card-author{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;}
+.mkt-install-btn{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 12px;border-radius:5px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;}
+.mkt-install-btn.install{background:rgba(0,229,160,0.15);color:var(--emerald);border:1px solid rgba(0,229,160,0.3);}
+.mkt-install-btn.install:hover{background:rgba(0,229,160,0.25);}
+.mkt-install-btn.remove{background:rgba(255,69,96,0.1);color:var(--red-alert);border:1px solid rgba(255,69,96,0.2);}
+.mkt-install-btn.remove:hover{background:rgba(255,69,96,0.2);}
+.mkt-installed-badge{position:absolute;top:12px;right:12px;font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1px;padding:2px 6px;background:rgba(0,229,160,0.1);color:var(--emerald);border:1px solid rgba(0,229,160,0.25);border-radius:3px;}
+.mkt-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.mkt-installed-count{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;}
+.mkt-open-btn{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1.5px;padding:6px 14px;border:1px solid var(--border-glow);border-radius:5px;background:rgba(0,220,255,0.05);color:var(--cyan);cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.mkt-open-btn:hover{background:rgba(0,220,255,0.12);border-color:var(--cyan);}
+
+/* ══ EXT: NOTAS RÁPIDAS (widget) ══ */
+.quick-notes-widget{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:16px;}
+.qn-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:10px;}
+.qn-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:180px;overflow-y:auto;}
+.qn-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--panel);border:1px solid var(--border);border-radius:6px;}
+.qn-item-text{flex:1;font-size:12px;color:var(--text-secondary);}
+.qn-del{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0 2px;transition:color 0.2s;}
+.qn-del:hover{color:var(--red-alert);}
+.qn-input-row{display:flex;gap:6px;}
+.qn-input{flex:1;background:var(--panel);border:1px solid var(--border-glow);border-radius:5px;padding:6px 9px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;font-size:12px;outline:none;}
+.qn-add-btn{background:rgba(0,220,255,0.1);border:1px solid var(--cyan);border-radius:5px;padding:6px 10px;color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;transition:all 0.2s;}
+.qn-add-btn:hover{background:rgba(0,220,255,0.2);}
+
+/* ══ EXT: CALCULADORA GPA (widget) ══ */
+.gpa-widget{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:16px;}
+.gpa-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-bottom:10px;}
+.gpa-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.gpa-row{display:grid;grid-template-columns:1fr 80px 80px 28px;gap:6px;align-items:center;}
+.gpa-input{background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;font-size:11px;outline:none;width:100%;}
+.gpa-input:focus{border-color:var(--border-glow);}
+.gpa-del{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;transition:color 0.2s;}
+.gpa-del:hover{color:var(--red-alert);}
+.gpa-actions{display:flex;gap:6px;margin-bottom:10px;}
+.gpa-btn{background:rgba(180,79,255,0.1);border:1px solid rgba(180,79,255,0.3);border-radius:5px;padding:5px 10px;color:var(--purple);font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+.gpa-btn:hover{background:rgba(180,79,255,0.2);}
+.gpa-result{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;color:var(--purple);text-shadow:0 0 15px rgba(180,79,255,0.4);text-align:center;padding:8px 0;}
+.gpa-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);text-align:center;letter-spacing:1px;}
+
+/* ══ EXT: MÚSICA (widget) ══ */
+.music-widget{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:16px;}
+.music-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--emerald);text-transform:uppercase;margin-bottom:10px;}
+.music-tracks{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.music-track{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;}
+.music-track:hover,.music-track.active{border-color:var(--emerald);background:rgba(0,229,160,0.06);}
+.music-track-icon{font-size:14px;width:20px;text-align:center;}
+.music-track-name{flex:1;font-size:11px;color:var(--text-secondary);}
+.music-track-dur{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);}
+.music-controls{display:flex;align-items:center;gap:8px;padding:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;}
+.music-ctrl-btn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;transition:color 0.2s;padding:2px 6px;}
+.music-ctrl-btn:hover,.music-ctrl-btn.active{color:var(--emerald);}
+.music-now{flex:1;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--emerald);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ══ EXT: CONTADOR AGUA (widget) ══ */
+.water-widget{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:16px;}
+.water-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:10px;}
+.water-glasses{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.water-glass{width:34px;height:44px;border:1.5px solid var(--border-glow);border-radius:3px 3px 6px 6px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;background:transparent;}
+.water-glass.filled{border-color:var(--cyan);}
+.water-glass .fill{position:absolute;bottom:0;left:0;right:0;background:rgba(0,220,255,0.3);transition:height 0.3s;}
+.water-glass.filled .fill{height:100%;background:rgba(0,220,255,0.25);}
+.water-info{display:flex;justify-content:space-between;align-items:center;}
+.water-ml{font-family:'Orbitron',monospace;font-size:18px;color:var(--cyan);}
+.water-goal{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;}
+
+/* ══ EXT: TAB METAS ══ */
+.goals-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.goal-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.goal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.goal-name{font-size:13px;font-weight:700;color:var(--text-primary);}
+.goal-pct{font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);}
+.goal-bar-bg{height:5px;background:var(--border);border-radius:3px;margin-bottom:8px;}
+.goal-bar{height:5px;border-radius:3px;transition:width 0.5s;}
+.goal-desc{font-size:11px;color:var(--text-muted);margin-bottom:8px;}
+.goal-deadline{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:1px;}
+.goals-add-form{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:14px;}
+.goals-add-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px;}
+.goals-form-grid{display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:8px;}
+.goals-input{background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:7px 10px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;font-size:12px;outline:none;}
+.goals-input:focus{border-color:var(--border-glow);}
+.goals-submit{background:rgba(0,220,255,0.1);border:1px solid var(--cyan);border-radius:5px;padding:7px 12px;color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;transition:all 0.2s;}
+.goals-submit:hover{background:rgba(0,220,255,0.2);}
+
+/* ══ EXT: TAB NUTRICIÓN ══ */
+.nutri-macros{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.macro-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.macro-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;}
+.macro-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;}
+.macro-unit{font-size:10px;opacity:.6;}
+.macro-bar-bg{height:4px;background:var(--border);border-radius:2px;margin-top:6px;}
+.macro-bar{height:4px;border-radius:2px;transition:width 0.5s;}
+.nutri-meals{display:flex;flex-direction:column;gap:8px;}
+.meal-card{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.meal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.meal-name{font-size:12px;font-weight:700;color:var(--text-primary);}
+.meal-kcal{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:1px;}
+.meal-items{display:flex;flex-wrap:wrap;gap:5px;}
+.meal-tag{font-size:10px;color:var(--text-secondary);padding:2px 7px;border:1px solid var(--border);border-radius:3px;}
+
+/* ══ EXT: APPS EXTERNAS ══ */
+.ext-app-widget{background:var(--carbon-light);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:16px;}
+.ext-app-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);}
+.ext-app-title{display:flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+.ext-app-logo{width:20px;height:20px;border-radius:4px;object-fit:contain;flex-shrink:0;}
+.ext-app-open-btn{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:4px 10px;border-radius:4px;border:1px solid var(--border-glow);background:transparent;color:var(--cyan);cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;}
+.ext-app-open-btn:hover{background:rgba(0,220,255,0.1);border-color:var(--cyan);}
+.ext-iframe-wrap{position:relative;width:100%;height:420px;overflow:hidden;}
+.ext-iframe-wrap iframe{width:100%;height:100%;border:none;background:#fff;}
+.ext-iframe-blocked{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:24px;text-align:center;}
+.ext-iframe-blocked.show{display:flex;}
+.ext-blocked-icon{font-size:36px;}
+.ext-blocked-msg{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:1px;line-height:1.7;}
+.ext-blocked-link{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:8px 18px;border-radius:6px;border:1px solid;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;}
+.ext-app-quicklinks{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px;}
+.ext-quicklink{display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:var(--panel);cursor:pointer;transition:all 0.2s;text-decoration:none;font-size:11px;color:var(--text-secondary);}
+.ext-quicklink:hover{border-color:var(--border-glow);background:var(--panel-hover);color:var(--text-primary);}
+.ext-quicklink-icon{font-size:14px;}
+.ext-app-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px;border-top:1px solid var(--border);}
+.ext-app-stat{text-align:center;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--panel);}
+.ext-app-stat-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;}
+.ext-app-stat-lbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;margin-top:3px;}
+.mkt-badge-external{background:rgba(255,184,48,0.12);color:var(--amber);border:1px solid rgba(255,184,48,0.3);}
+</style>
+</head>
+<body>
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+<div class="ambient ambient-3"></div>
+<div class="app-wrapper">
+
+<!-- HEADER -->
+<header>
+  <div class="logo-group">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="12" y1="2" x2="12" y2="9"/>
+        <line x1="12" y1="15" x2="12" y2="22"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <h1>NEXUS HROS</h1>
+      <span>// HUMAN PERFORMANCE OPTIMIZATION SYSTEM · CTP PAVAS</span>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="date-chip" id="datechip">CARGANDO...</div>
+    <div class="status-dot">SISTEMA ACTIVO</div>
+    <button class="mkt-open-btn" onclick="openMarketplace()">⊞ EXTENSIONES</button>
+  </div>
+</header>
+
+<!-- ══════════ MARKETPLACE OVERLAY ══════════ -->
+<div class="mkt-overlay" id="mkt-overlay">
+  <div class="mkt-modal">
+    <div class="mkt-header">
+      <div class="mkt-header-left">
+        <div>
+          <div class="mkt-title">⊞ NEXUS MARKETPLACE</div>
+          <div class="mkt-subtitle">// EXTENSIONES · PESTAÑAS Y WIDGETS PARA TU SISTEMA</div>
+        </div>
+      </div>
+      <button class="mkt-close" onclick="closeMarketplace()">✕</button>
+    </div>
+    <div class="mkt-filters">
+      <button class="mkt-filter-btn active" data-filter="all" onclick="filterMkt('all',this)">TODOS</button>
+      <button class="mkt-filter-btn" data-filter="tab" onclick="filterMkt('tab',this)">PESTAÑAS</button>
+      <button class="mkt-filter-btn" data-filter="widget" onclick="filterMkt('widget',this)">WIDGETS</button>
+      <button class="mkt-filter-btn" data-filter="external" onclick="filterMkt('external',this)">APPS REALES</button>
+      <button class="mkt-filter-btn" data-filter="installed" onclick="filterMkt('installed',this)">INSTALADOS</button>
+    </div>
+    <div class="mkt-grid" id="mkt-grid"></div>
+    <div class="mkt-footer">
+      <div class="mkt-installed-count" id="mkt-installed-count">0 extensiones instaladas</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;">NEXUS HROS · EXTENSION SYSTEM v1.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="nav-tabs" id="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">⬡ Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('schedule')">◈ Cronograma</button>
+  <button class="tab-btn" onclick="switchTab('workout')">◉ Calistenia</button>
+  <button class="tab-btn" onclick="switchTab('study')">⊕ Protocolo Estudio</button>
+  <button class="tab-btn" onclick="switchTab('feedback')">◎ Feedback</button>
+  <!-- Las pestañas de extensiones se inyectan aquí dinámicamente -->
+</div>
+
+<!-- ══════════ TAB: DASHBOARD ══════════ -->
+<div id="tab-dashboard" class="tab-content active">
+
+  <div class="stats-row">
+    <div class="stat-card cyan">
+      <div class="stat-label">Hábitos Hoy</div>
+      <div class="stat-value" id="stat-habits">0/10</div>
+      <div class="stat-sub">Haz clic para marcar ↓</div>
+    </div>
+    <div class="stat-card emerald">
+      <div class="stat-label">Racha Actual</div>
+      <div class="stat-value" id="stat-streak">1</div>
+      <div class="stat-sub">días consecutivos</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Estudio Hoy</div>
+      <div class="stat-value" id="stat-study">0<span style="font-size:16px;opacity:.5">/80</span></div>
+      <div class="stat-sub">minutos completados</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Disciplina</div>
+      <div class="stat-value" id="stat-discipline">0%</div>
+      <div class="stat-sub">esta semana</div>
+    </div>
+  </div>
+
+  <div class="insight-banner">
+    <div class="insight-icon">⚡</div>
+    <div class="insight-text" id="insight-text"></div>
+  </div>
+
+  <div class="habits-2col">
+    <div>
+      <div class="panel-header" style="margin-bottom:10px;padding:10px 0;">
+        <div class="panel-title"><div class="panel-title-dot"></div>HÁBITOS DIARIOS</div>
+      </div>
+      <div id="habits-list"></div>
+    </div>
+    <div>
+      <div class="panel-header" style="margin-bottom:10px;padding:10px 0;">
+        <div class="panel-title"><div class="panel-title-dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple);"></div>MAPA SEMANAL</div>
+      </div>
+      <div class="week-dot-grid" id="week-dot-grid"></div>
+
+      <div style="margin-top:16px;">
+        <div class="panel-header" style="margin-bottom:10px;padding:10px 0;">
+          <div class="panel-title"><div class="panel-title-dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan);"></div>TEMPORIZADOR POMODORO</div>
+        </div>
+        <div class="pomodoro-widget">
+          <div class="pom-label">SESIÓN DE ESTUDIO</div>
+          <div class="pom-mode-row">
+            <button class="pom-mode-btn active" onclick="setPomMode(25,5,this)">25/5 Estándar</button>
+            <button class="pom-mode-btn" onclick="setPomMode(50,10,this)">50/10 Deep</button>
+            <button class="pom-mode-btn" onclick="setPomMode(90,20,this)">90/20 Flow</button>
+          </div>
+          <div class="pom-time" id="pom-display">25:00</div>
+          <div class="pom-buttons">
+            <button class="pom-btn start" onclick="togglePom()">▶ INICIAR</button>
+            <button class="pom-btn reset" onclick="resetPom()">↺ RESET</button>
+          </div>
+          <div class="pom-subject" id="pom-subject">Selecciona una materia ↑</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Widgets de extensiones del dashboard -->
+  <div id="ext-widgets-container"></div>
+
+</div>
+
+<!-- Pestañas de extensiones se renderizan aquí dinámicamente -->
+<div id="ext-tabs-container"></div>
+
+<!-- ══════════ TAB: CRONOGRAMA ══════════ -->
+<div id="tab-schedule" class="tab-content">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot sleep"></div>SUEÑO</div>
+    <div class="legend-item"><div class="legend-dot class"></div>CLASES</div>
+    <div class="legend-item"><div class="legend-dot study-hard"></div>ESTUDIO DIFÍCIL</div>
+    <div class="legend-item"><div class="legend-dot study-easy"></div>ESTUDIO FÁCIL</div>
+    <div class="legend-item"><div class="legend-dot exercise"></div>ENTRENAMIENTO</div>
+    <div class="legend-item"><div class="legend-dot meal"></div>COMIDA</div>
+    <div class="legend-item"><div class="legend-dot buffer"></div>TRANSICIÓN</div>
+    <div class="legend-item"><div class="legend-dot break"></div>DESCANSO</div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-title-dot"></div>CRONOGRAMA MAESTRO SEMANAL · TIME-BLOCKING</div>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);">HORA A HORA · ADAPTADO A CTP PAVAS</span>
+    </div>
+    <div class="panel-body">
+      <div class="schedule-grid">
+        <div class="day-col-hdr" id="day-hdr-lun">LUNES</div>
+        <div class="day-col-hdr" id="day-hdr-mar">MARTES</div>
+        <div class="day-col-hdr" id="day-hdr-mie">MIÉRC.</div>
+        <div class="day-col-hdr" id="day-hdr-jue">JUEVES</div>
+        <div class="day-col-hdr" id="day-hdr-vie">VIERNES</div>
+        <div class="day-col-hdr" id="day-hdr-sab">SÁBADO</div>
+        <div class="day-col-hdr" id="day-hdr-dom">DOMINGO</div>
+        <!-- LUNES -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–04:00</div><div class="b-name">SUEÑO</div><div class="b-tag">6h · Recuperación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:00–04:20</div><div class="b-name">🧠 Matemáticas</div><div class="b-tag">Peak cognitivo</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:20–04:40</div><div class="b-name">🧪 Química</div><div class="b-tag">Alta dificultad</div></div>
+          <div class="sched-block buffer"><div class="b-time">04:40–04:50</div><div class="b-name">· buffer ·</div><div class="b-tag">Hidratación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:50–05:30</div><div class="b-name">🔬 Biología</div><div class="b-tag">Técnica Feynman</div></div>
+          <div class="sched-block meal"><div class="b-time">05:30–06:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Proteína + carbos</div></div>
+          <div class="sched-block exercise"><div class="b-time">06:00–07:00</div><div class="b-name">💪 Calistenia A</div><div class="b-tag">Push · Empuje</div></div>
+          <div class="sched-block class"><div class="b-time">07:00–16:30</div><div class="b-name">🏫 Clases</div><div class="b-tag">CTP Pavas</div></div>
+          <div class="sched-block meal"><div class="b-time">16:30–17:00</div><div class="b-name">🍽 Almuerzo/Merienda</div><div class="b-tag">Recuperación</div></div>
+          <div class="sched-block study-easy"><div class="b-time">17:00–17:40</div><div class="b-name">📖 Español / Inglés</div><div class="b-tag">Repaso liviano</div></div>
+          <div class="sched-block break"><div class="b-time">17:40–18:00</div><div class="b-name">☕ Descanso</div><div class="b-tag">Sin pantallas</div></div>
+          <div class="sched-block study-easy"><div class="b-time">18:00–18:40</div><div class="b-name">📚 Cívica / AYSAC</div><div class="b-tag">Repaso + tareas</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Rutina nocturna</div><div class="b-tag">Journaling + prep</div></div>
+        </div>
+        <!-- MARTES -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–04:00</div><div class="b-name">SUEÑO</div><div class="b-tag">6h · Recuperación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:00–04:20</div><div class="b-name">🧮 CESAR</div><div class="b-tag">Peak cognitivo</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:20–05:10</div><div class="b-name">🔬 Biología</div><div class="b-tag">Mapas mentales</div></div>
+          <div class="sched-block buffer"><div class="b-time">05:10–05:20</div><div class="b-name">· buffer ·</div><div class="b-tag">Estirar / agua</div></div>
+          <div class="sched-block study-hard"><div class="b-time">05:20–05:30</div><div class="b-name">🧪 Química repaso</div><div class="b-tag">Flashcards</div></div>
+          <div class="sched-block meal"><div class="b-time">05:30–06:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Proteína + carbos</div></div>
+          <div class="sched-block break"><div class="b-time">06:00–07:00</div><div class="b-name">🧘 Recuperación</div><div class="b-tag">Descanso activo</div></div>
+          <div class="sched-block class"><div class="b-time">07:00–16:30</div><div class="b-name">🏫 Clases</div><div class="b-tag">CTP Pavas</div></div>
+          <div class="sched-block meal"><div class="b-time">16:30–17:00</div><div class="b-name">🍽 Merienda</div><div class="b-tag">Recuperación</div></div>
+          <div class="sched-block study-easy"><div class="b-time">17:00–17:40</div><div class="b-name">📖 Emprendimiento</div><div class="b-tag">Lectura activa</div></div>
+          <div class="sched-block break"><div class="b-time">17:40–18:10</div><div class="b-name">☕ Descanso</div><div class="b-tag">Paseo breve</div></div>
+          <div class="sched-block study-easy"><div class="b-time">18:10–18:50</div><div class="b-name">🎵 Música / Ética</div><div class="b-tag">Repaso liviano</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Rutina nocturna</div><div class="b-tag">Revisión del día</div></div>
+        </div>
+        <!-- MIÉRCOLES -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–04:00</div><div class="b-name">SUEÑO</div><div class="b-tag">6h · Recuperación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:00–04:50</div><div class="b-name">🧠 Matemáticas</div><div class="b-tag">Ejercicios duros</div></div>
+          <div class="sched-block buffer"><div class="b-time">04:50–05:00</div><div class="b-name">· buffer ·</div><div class="b-tag">Agua + respira</div></div>
+          <div class="sched-block study-hard"><div class="b-time">05:00–05:30</div><div class="b-name">💻 SO y Redes</div><div class="b-tag">Práctica técnica</div></div>
+          <div class="sched-block meal"><div class="b-time">05:30–06:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Proteína + carbos</div></div>
+          <div class="sched-block exercise"><div class="b-time">06:00–07:00</div><div class="b-name">💪 Calistenia B</div><div class="b-tag">Pull · Jalón</div></div>
+          <div class="sched-block class"><div class="b-time">07:00–16:30</div><div class="b-name">🏫 Clases</div><div class="b-tag">CTP Pavas</div></div>
+          <div class="sched-block meal"><div class="b-time">16:30–17:00</div><div class="b-name">🍽 Merienda</div><div class="b-tag">Recuperación</div></div>
+          <div class="sched-block study-easy"><div class="b-time">17:00–17:40</div><div class="b-name">📖 Sociales / Cívica</div><div class="b-tag">Repasos</div></div>
+          <div class="sched-block break"><div class="b-time">17:40–18:00</div><div class="b-name">☕ Descanso</div><div class="b-tag">Sin pantallas</div></div>
+          <div class="sched-block study-easy"><div class="b-time">18:00–18:40</div><div class="b-name">🌐 Inglés</div><div class="b-tag">Práctica oral</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Rutina nocturna</div><div class="b-tag">Journaling</div></div>
+        </div>
+        <!-- JUEVES -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–04:00</div><div class="b-name">SUEÑO</div><div class="b-tag">6h · Recuperación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:00–04:20</div><div class="b-name">🧪 Química</div><div class="b-tag">Peak cognitivo</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:20–05:10</div><div class="b-name">💻 CESAR / AYSAC</div><div class="b-tag">Práctica lab</div></div>
+          <div class="sched-block buffer"><div class="b-time">05:10–05:20</div><div class="b-name">· buffer ·</div><div class="b-tag">Hidratación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">05:20–05:30</div><div class="b-name">🔬 Bio repaso</div><div class="b-tag">Tarjetas</div></div>
+          <div class="sched-block meal"><div class="b-time">05:30–06:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Proteína + carbos</div></div>
+          <div class="sched-block break"><div class="b-time">06:00–07:00</div><div class="b-name">🧘 Recuperación</div><div class="b-tag">Caminar / estirar</div></div>
+          <div class="sched-block class"><div class="b-time">07:00–16:30</div><div class="b-name">🏫 Clases</div><div class="b-tag">CTP Pavas</div></div>
+          <div class="sched-block meal"><div class="b-time">16:30–17:00</div><div class="b-name">🍽 Merienda</div><div class="b-tag">Recuperación</div></div>
+          <div class="sched-block study-easy"><div class="b-time">17:00–17:40</div><div class="b-name">📖 Español / Etica</div><div class="b-tag">Composición</div></div>
+          <div class="sched-block break"><div class="b-time">17:40–18:10</div><div class="b-name">☕ Descanso</div><div class="b-tag">Música + relajar</div></div>
+          <div class="sched-block study-easy"><div class="b-time">18:10–18:50</div><div class="b-name">📚 Emprendimiento</div><div class="b-tag">Plan semanal</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Rutina nocturna</div><div class="b-tag">Revisión</div></div>
+        </div>
+        <!-- VIERNES -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–04:00</div><div class="b-name">SUEÑO</div><div class="b-tag">6h · Recuperación</div></div>
+          <div class="sched-block study-hard"><div class="b-time">04:00–05:00</div><div class="b-name">🧠 Repaso semana</div><div class="b-tag">Todas difíciles</div></div>
+          <div class="sched-block buffer"><div class="b-time">05:00–05:10</div><div class="b-name">· buffer ·</div><div class="b-tag">Prepare gym bag</div></div>
+          <div class="sched-block study-easy"><div class="b-time">05:10–05:30</div><div class="b-name">📖 Lectura libre</div><div class="b-tag">Curiosidad</div></div>
+          <div class="sched-block meal"><div class="b-time">05:30–06:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Proteína + carbos</div></div>
+          <div class="sched-block exercise"><div class="b-time">06:00–07:00</div><div class="b-name">💪 Calistenia C</div><div class="b-tag">Piernas + Core</div></div>
+          <div class="sched-block class"><div class="b-time">07:00–16:30</div><div class="b-name">🏫 Clases</div><div class="b-tag">CTP Pavas</div></div>
+          <div class="sched-block meal"><div class="b-time">16:30–17:00</div><div class="b-name">🍽 Merienda</div><div class="b-tag">Recuperación</div></div>
+          <div class="sched-block study-easy"><div class="b-time">17:00–17:40</div><div class="b-name">📖 Repaso libre</div><div class="b-tag">Lo que faltó</div></div>
+          <div class="sched-block break"><div class="b-time">17:40–21:00</div><div class="b-name">🎮 Tiempo libre</div><div class="b-tag">Recarga mental</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Rutina nocturna</div><div class="b-tag">Feedback semanal</div></div>
+        </div>
+        <!-- SÁBADO -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–05:00</div><div class="b-name">SUEÑO</div><div class="b-tag">7h · Recuperación+</div></div>
+          <div class="sched-block exercise"><div class="b-time">05:00–06:00</div><div class="b-name">💪 Calistenia D</div><div class="b-tag">Full body</div></div>
+          <div class="sched-block buffer"><div class="b-time">06:00–06:20</div><div class="b-name">· buffer ·</div><div class="b-tag">Ducha + nutrición</div></div>
+          <div class="sched-block meal"><div class="b-time">06:20–07:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Completo</div></div>
+          <div class="sched-block study-hard"><div class="b-time">07:00–08:20</div><div class="b-name">🧠 Estudio profundo</div><div class="b-tag">Materia más difícil</div></div>
+          <div class="sched-block break"><div class="b-time">08:20–08:40</div><div class="b-name">☕ Descanso</div><div class="b-tag">Salir afuera</div></div>
+          <div class="sched-block study-easy"><div class="b-time">08:40–09:40</div><div class="b-name">📖 Repasos + tareas</div><div class="b-tag">Materias fáciles</div></div>
+          <div class="sched-block break"><div class="b-time">09:40–21:00</div><div class="b-name">🎯 Tiempo libre</div><div class="b-tag">Recarga total</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Prepara semana</div><div class="b-tag">Planificación</div></div>
+        </div>
+        <!-- DOMINGO -->
+        <div class="schedule-col">
+          <div class="sched-block sleep"><div class="b-time">22:00–05:00</div><div class="b-name">SUEÑO</div><div class="b-tag">7h · Máx recuperación</div></div>
+          <div class="sched-block break"><div class="b-time">05:00–07:00</div><div class="b-name">🧘 Mañana lenta</div><div class="b-tag">Sin obligaciones</div></div>
+          <div class="sched-block meal"><div class="b-time">07:00–08:00</div><div class="b-name">🍽 Desayuno</div><div class="b-tag">Familiar</div></div>
+          <div class="sched-block study-easy"><div class="b-time">08:00–09:00</div><div class="b-name">📋 Revisión semanal</div><div class="b-tag">Feedback + ajuste</div></div>
+          <div class="sched-block study-hard"><div class="b-time">09:00–10:00</div><div class="b-name">🧠 Prepara siguiente semana</div><div class="b-tag">Preview materias</div></div>
+          <div class="sched-block break"><div class="b-time">10:00–21:00</div><div class="b-name">🌿 Recuperación</div><div class="b-tag">Familia / amigos</div></div>
+          <div class="sched-block sleep"><div class="b-time">21:00–22:00</div><div class="b-name">🌙 Prepara semana</div><div class="b-tag">Ropa / mochila</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: CALISTENIA ══════════ -->
+<div id="tab-workout" class="tab-content">
+  <div class="stats-row">
+    <div class="stat-card emerald">
+      <div class="stat-label">Días / Semana</div>
+      <div class="stat-value">4</div>
+      <div class="stat-sub">Lun · Mié · Vie · Sáb</div>
+    </div>
+    <div class="stat-card cyan">
+      <div class="stat-label">Min / Sesión</div>
+      <div class="stat-value">60</div>
+      <div class="stat-sub">6:00–7:00 AM</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Objetivo</div>
+      <div class="stat-value" style="font-size:18px;padding-top:4px;">MASA</div>
+      <div class="stat-sub">Hipertrofia calistenia</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Progresión</div>
+      <div class="stat-value" style="font-size:18px;padding-top:4px;">+VOL</div>
+      <div class="stat-sub">Cada 2 semanas</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-title-dot" style="background:var(--emerald);box-shadow:0 0 8px var(--emerald);"></div>SINERGIA EJERCICIO-NEUROPLASTICIDAD</div>
+    </div>
+    <div class="panel-body">
+      <div class="synergy-grid">
+        <div class="synergy-card">
+          <div class="syn-hdr"><div class="syn-icon">🧠</div><div class="syn-title">POR QUÉ EJERCITAR ANTES DE CLASES</div></div>
+          <div class="syn-desc">El ejercicio libera BDNF (Factor Neurotrófico), que actúa como "fertilizante cerebral". Entrenar a las 6 AM maximiza la plasticidad neuronal justo antes de las 7 horas de clases.</div>
+          <div class="syn-tip">↑ 200% retención de información post-ejercicio vs. sin ejercicio</div>
+        </div>
+        <div class="synergy-card">
+          <div class="syn-hdr"><div class="syn-icon">⚡</div><div class="syn-title">MADRUGADA = VENTAJA COMPETITIVA</div></div>
+          <div class="syn-desc">Tu pico cognitivo 4-5 AM coincide con niveles bajos de cortisol y alta concentración de dopamina. Es el momento biológicamente óptimo para materias difíciles como Matemáticas y Química.</div>
+          <div class="syn-tip">Estudio 4-5 AM = equivale a 2-3h de estudio nocturno en calidad</div>
+        </div>
+        <div class="synergy-card">
+          <div class="syn-hdr"><div class="syn-icon">💪</div><div class="syn-title">CALISTENIA PARA MASA MUSCULAR</div></div>
+          <div class="syn-desc">La hipertrofia con calistenia requiere progresión de dificultad (no solo repeticiones). Estructura: tensión mecánica + tiempo bajo tensión + volumen semanal acumulado.</div>
+          <div class="syn-tip">Progresión cada 2 semanas: añade 1 set o avanza variante</div>
+        </div>
+        <div class="synergy-card">
+          <div class="syn-hdr"><div class="syn-icon">😴</div><div class="syn-title">RECUPERACIÓN = CRECIMIENTO</div></div>
+          <div class="syn-desc">Con 6h de sueño el músculo se repara. Los días de descanso (Mar/Jue) no son pérdidas — son cuando el cuerpo sintetiza proteína muscular y el cerebro consolida lo aprendido.</div>
+          <div class="syn-tip">Proteína recomendada: 1.6–2g por kg de peso corporal/día</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="workout-grid" id="workout-grid"></div>
+</div>
+
+<!-- ══════════ TAB: PROTOCOLO ESTUDIO ══════════ -->
+<div id="tab-study" class="tab-content">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-title-dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple);"></div>TÉCNICAS DE APRENDIZAJE ACELERADO</div>
+    </div>
+    <div class="panel-body">
+      <div class="technique-cards">
+        <div class="tech-card pomodoro">
+          <div class="tech-icon">⏱</div>
+          <div class="tech-name">POMODORO MODIFICADO</div>
+          <div class="tech-desc">Para materias difíciles (Mate, Química, Bio): bloques de 25 min de concentración total + 5 min de descanso activo. En tu ventana 4-5 AM usa bloques de 20 min por mayor frescura cognitiva.</div>
+          <div class="tech-timer">25 TRABAJO · 5 DESCANSO · 4 CICLOS = SESIÓN</div>
+        </div>
+        <div class="tech-card feynman">
+          <div class="tech-icon">✍️</div>
+          <div class="tech-name">TÉCNICA FEYNMAN</div>
+          <div class="tech-desc">Después de estudiar un concepto difícil (ej. reacciones químicas, genética), escríbelo o explícalo en voz alta como si se lo enseñaras a alguien de primaria. Lo que no puedes explicar simple, no lo entendiste.</div>
+          <div class="tech-timer">APLICA EN: Biología · Química · SO y Redes</div>
+        </div>
+        <div class="tech-card spaced">
+          <div class="tech-icon">🔄</div>
+          <div class="tech-name">REPETICIÓN ESPACIADA</div>
+          <div class="tech-desc">Repasa el material 1 día después, luego 3 días, luego 7 días. Esto aprovecha la curva del olvido de Ebbinghaus. Las materias difíciles se repasan cada 2 días; las fáciles, cada semana.</div>
+          <div class="tech-timer">DÍA 1 → DÍA 2 → DÍA 5 → DÍA 12 → CONSOLIDADO</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-title-dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan);"></div>PROTOCOLO POR MATERIA · 80 MIN DIARIOS</div>
+    </div>
+    <div class="panel-body">
+      <div class="subject-grid" id="subject-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: FEEDBACK ══════════ -->
+<div id="tab-feedback" class="tab-content">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-title-dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber);"></div>EVALUACIÓN SEMANAL · SISTEMA DE AJUSTE</div>
+    </div>
+    <div class="panel-body">
+      <div class="feedback-grid">
+        <div class="rating-section">
+          <div class="rating-title">// CALIFICA TU SEMANA (1–5)</div>
+          <div id="rating-rows"></div>
+          <div style="margin-top:14px;padding:10px;background:rgba(255,184,48,0.05);border:1px solid rgba(255,184,48,0.15);border-radius:6px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">// PUNTUACIÓN GLOBAL</div>
+            <div style="font-family:'Orbitron',monospace;font-size:32px;color:var(--amber);text-shadow:0 0 20px rgba(255,184,48,0.4);" id="global-score">0.0</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" id="global-label">Califica los criterios arriba</div>
+          </div>
+        </div>
+        <div class="adjustment-panel">
+          <div class="adj-title">// REGLAS DE AJUSTE AUTOMÁTICO</div>
+          <div class="adj-rule">
+            <div class="adj-icon">📉</div>
+            <div class="adj-text"><strong>Si estudias &lt;50% del tiempo planificado:</strong> Reduce bloques de estudio difícil a 15 min y añade 1 sesión de recuperación el domingo.</div>
+          </div>
+          <div class="adj-rule">
+            <div class="adj-icon">😴</div>
+            <div class="adj-text"><strong>Si te cuesta despertar a las 4AM más de 3 días:</strong> Ajusta a 4:30AM por 1 semana antes de volver a adelantar.</div>
+          </div>
+          <div class="adj-rule">
+            <div class="adj-icon">💪</div>
+            <div class="adj-text"><strong>Si completas 100% del entrenamiento 2 semanas seguidas:</strong> Progresa una variante más difícil o añade 1 set a cada ejercicio.</div>
+          </div>
+          <div class="adj-rule">
+            <div class="adj-icon">🧠</div>
+            <div class="adj-text"><strong>Si tu nota baja en una materia difícil:</strong> Muévela a las 4:00–4:30 AM del día siguiente y aplica Feynman obligatorio.</div>
+          </div>
+          <div class="adj-rule">
+            <div class="adj-icon">🏆</div>
+            <div class="adj-text"><strong>Si completas el 80%+ del plan 3 semanas seguidas:</strong> Añade 10 min más de estudio o una nueva rutina de hábito.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end app-wrapper -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-items">
+    <div class="nav-item active" onclick="switchTab('dashboard');setNavActive(this)">⬡ Dashboard</div>
+    <div class="nav-item" onclick="switchTab('schedule');setNavActive(this)">◈ Cronograma</div>
+    <div class="nav-item" onclick="switchTab('workout');setNavActive(this)">◉ Calistenia</div>
+    <div class="nav-item" onclick="switchTab('study');setNavActive(this)">⊕ Estudio</div>
+    <div class="nav-item" onclick="switchTab('feedback');setNavActive(this)">◎ Feedback</div>
+  </div>
+  <div class="build-tag">NEXUS HROS · BUILD 2026.05 · CTP PAVAS</div>
+</div>
+
+<script>
+// ── DATA ──
+const habits = [
+  {id:1, name:'Despertar 4:00 AM', meta:'Madrugada · sin snooze', pct:0, color:'cyan', streak:1, done:false},
+  {id:2, name:'Estudio difícil 4-5 AM', meta:'80 min · peak cognitivo', pct:0, color:'purple', streak:1, done:false},
+  {id:3, name:'Hidratación 2L', meta:'8 vasos · todo el día', pct:0, color:'cyan', streak:1, done:false},
+  {id:4, name:'Desayuno con proteína', meta:'Antes de entrenar', pct:0, color:'emerald', streak:1, done:false},
+  {id:5, name:'Entrenamiento calistenia', meta:'60 min · 6:00 AM (días activos)', pct:0, color:'emerald', streak:1, done:false},
+  {id:6, name:'Repaso nocturno', meta:'17:00–18:50 · materias fáciles', pct:0, color:'cyan', streak:1, done:false},
+  {id:7, name:'Journaling / reflexión', meta:'21:00 · 10 min', pct:0, color:'amber', streak:1, done:false},
+  {id:8, name:'Sin celular hasta las 6 AM', meta:'Protege el peak cognitivo', pct:0, color:'purple', streak:1, done:false},
+  {id:9, name:'Dormir antes de 10 PM', meta:'6h mínimo para rendir a las 4', pct:0, color:'amber', streak:1, done:false},
+  {id:10, name:'Repaso con Feynman', meta:'1 concepto difícil/día', pct:0, color:'purple', streak:1, done:false},
+];
+
+const weekDots = [
+  {name:'Madrugada 4AM', color:'cyan',   done:[1,1,1,1,0,0,0]},
+  {name:'Entrenamiento', color:'emerald', done:[1,0,1,0,1,1,0]},
+  {name:'Estudio AM',   color:'purple',  done:[1,1,1,1,1,0,0]},
+  {name:'Repaso PM',    color:'cyan',    done:[1,1,0,1,1,0,0]},
+  {name:'Journaling',   color:'amber',   done:[1,0,1,1,0,0,0]},
+];
+
+const subjects = [
+  {name:'Matemáticas', diff:'alta', color:'purple', technique:'Pomodoro 25/5 · Ejercicios activos', time:'20 min', tip:'Lun/Mié/Vie 4AM'},
+  {name:'Química', diff:'alta', color:'purple', technique:'Feynman + esquemas de reacciones', time:'15 min', tip:'Lun/Jue 4AM'},
+  {name:'Biología', diff:'alta', color:'purple', technique:'Mapas mentales + repetición espaciada', time:'20 min', tip:'Mar/Mié 4AM'},
+  {name:'SO y Redes', diff:'alta', color:'purple', technique:'Práctica técnica + documentación', time:'15 min', tip:'Mié/Jue 4AM'},
+  {name:'CESAR', diff:'alta', color:'purple', technique:'Ejercicios prácticos + proyectos', time:'10 min', tip:'Mar/Jue 4AM'},
+  {name:'Español', diff:'baja', color:'cyan', technique:'Lectura activa + resúmenes propios', time:'10 min', tip:'Lun/Jue PM'},
+  {name:'Inglés', diff:'baja', color:'cyan', technique:'Práctica oral + shadowing', time:'10 min', tip:'Mié/Vie PM'},
+  {name:'Cívica', diff:'baja', color:'cyan', technique:'Lectura + preguntas clave', time:'5 min', tip:'Lun PM'},
+  {name:'Emprendimiento', diff:'baja', color:'cyan', technique:'Aplicación práctica + casos reales', time:'10 min', tip:'Mar/Jue PM'},
+  {name:'Estudios Sociales', diff:'baja', color:'cyan', technique:'Líneas de tiempo + mapas', time:'5 min', tip:'Mié PM'},
+  {name:'Música', diff:'baja', color:'cyan', technique:'Teoría + escucha activa', time:'5 min', tip:'Mar PM'},
+  {name:'Ética', diff:'baja', color:'cyan', technique:'Ensayo breve + debate mental', time:'5 min', tip:'Jue PM'},
+];
+
+const workouts = [
+  {
+    day:'LUNES', type:'PUSH · EMPUJE', colorClass:'emerald',
+    exercises:[
+      {name:'Flexiones estándar', sets:'4×12–15', muscle:'Pectoral'},
+      {name:'Flexiones inclinadas (pies en silla)', sets:'3×10', muscle:'Pectoral alto'},
+      {name:'Flexiones diamante', sets:'3×10–12', muscle:'Tríceps'},
+      {name:'Fondos en sillas', sets:'4×10–12', muscle:'Tríceps / pectoral'},
+      {name:'Flexiones pike (hombros)', sets:'3×10', muscle:'Deltoides'},
+      {name:'Flexiones declinadas', sets:'3×10', muscle:'Pectoral bajo'},
+    ],
+    rest:'Descanso 60–90 seg entre sets · Martes = recuperación'
+  },
+  {
+    day:'MIÉRCOLES', type:'PULL · JALÓN', colorClass:'cyan',
+    exercises:[
+      {name:'Dominadas supinas (si tienes barra)', sets:'4×6–10', muscle:'Dorsal / Bíceps'},
+      {name:'Remo con mochila (en mesa)', sets:'4×12', muscle:'Dorsal / Romboides'},
+      {name:'Curl de bíceps con mochila', sets:'3×12–15', muscle:'Bíceps'},
+      {name:'Jalones con toalla en puerta', sets:'3×12', muscle:'Dorsal'},
+      {name:'Retracción escapular', sets:'3×15', muscle:'Romboides'},
+      {name:'Face pull con banda/toalla', sets:'3×15', muscle:'Deltoides posterior'},
+    ],
+    rest:'Descanso 60–90 seg · Jueves = recuperación activa'
+  },
+  {
+    day:'VIERNES', type:'PIERNAS + CORE', colorClass:'purple',
+    exercises:[
+      {name:'Sentadillas profundas', sets:'4×15–20', muscle:'Cuádriceps / Glúteo'},
+      {name:'Zancadas alternas', sets:'3×12 c/pierna', muscle:'Cuádriceps / Glúteo'},
+      {name:'Puente de glúteo con pausa', sets:'4×15', muscle:'Glúteo / Isquios'},
+      {name:'Plancha frontal', sets:'3×45–60 seg', muscle:'Core'},
+      {name:'Plancha lateral', sets:'3×30 seg c/lado', muscle:'Oblicuos'},
+      {name:'Elevaciones de piernas colgado o en suelo', sets:'3×12–15', muscle:'Abdomen bajo'},
+    ],
+    rest:'Descanso 45–60 seg en core · 90 seg en piernas'
+  },
+  {
+    day:'SÁBADO', type:'FULL BODY + PROGRESIÓN', colorClass:'amber',
+    exercises:[
+      {name:'Flexiones explosivas', sets:'3×8', muscle:'Potencia / Pectoral'},
+      {name:'Sentadillas a una pierna (asistidas)', sets:'3×8 c/lado', muscle:'Cuádriceps'},
+      {name:'Fondos profundos (entre sillas)', sets:'3×10', muscle:'Tríceps / Pectoral'},
+      {name:'Superman en suelo', sets:'3×12', muscle:'Espalda baja / Glúteo'},
+      {name:'Mountain climbers', sets:'3×20 seg', muscle:'Core + Cardio'},
+      {name:'Burpees (versión controlada)', sets:'3×8', muscle:'Full body'},
+    ],
+    rest:'Circuito completo · 90 seg entre ejercicios · sesión más larga'
+  },
+];
+
+const ratingCriteria = [
+  'Cumplí el horario de estudio',
+  'Mantuve la madrugada (4 AM)',
+  'Completé entrenamientos',
+  'Usé técnicas de estudio',
+  'Hice journaling diario',
+];
+
+let ratingValues = [0,0,0,0,0];
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if(b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+tab+"'")) b.classList.add('active');
+  });
+  // Sincronizar bottom nav
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(n => {
+    n.classList.remove('active');
+    if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+tab+"'")) n.classList.add('active');
+  });
+}
+
+function setNavActive(el) {
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── HABITS ──
+function renderHabits() {
+  const el = document.getElementById('habits-list');
+  const done = habits.filter(h=>h.done).length;
+  el.innerHTML = habits.map(h => `
+    <div class="habit-item ${h.color} ${h.done?'completed':''}" onclick="toggleHabit(${h.id})">
+      <div class="habit-check">${h.done?'✓':''}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-meta">${h.meta}</div>
+      </div>
+      <div class="habit-streak">🔥 ${h.streak}d</div>
+    </div>
+  `).join('') + `<button class="add-habit-btn" onclick="addHabit()">+ NUEVO HÁBITO</button>`;
+  document.getElementById('stat-habits').innerHTML = `${done}<span style="font-size:16px;opacity:.5">/${habits.length}</span>`;
+  const pct = Math.round(done/habits.length*100);
+  document.getElementById('stat-discipline').textContent = pct+'%';
+  renderWeekDots();
+  updateStudyStatDisplay();
+}
+
+function toggleHabit(id) {
+  const h = habits.find(x=>x.id===id);
+  if(!h) return;
+  const wasUndone = !h.done;
+  h.done = !h.done;
+  if(wasUndone) h.streak++;
+  else if(h.streak > 0) h.streak--;
+  saveToStorage();
+  renderHabits();
+}
+
+function addHabit() {
+  const container = document.getElementById('habits-list');
+  // Evitar duplicar el input
+  if(document.getElementById('new-habit-input')) return;
+  const inputRow = document.createElement('div');
+  inputRow.id = 'new-habit-input';
+  inputRow.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;';
+  inputRow.innerHTML = `
+    <input id="new-habit-name" placeholder="Nombre del hábito..." style="flex:1;background:var(--carbon-light);border:1px solid var(--border-glow);border-radius:6px;padding:7px 10px;color:var(--text-primary);font-family:Rajdhani,sans-serif;font-size:13px;outline:none;">
+    <button onclick="confirmAddHabit()" style="background:rgba(0,220,255,0.1);border:1px solid var(--cyan);border-radius:6px;padding:7px 12px;color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;">+ AÑADIR</button>
+    <button onclick="cancelAddHabit()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text-muted);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;">✕</button>
+  `;
+  container.insertBefore(inputRow, container.lastElementChild);
+  document.getElementById('new-habit-name').focus();
+}
+
+function confirmAddHabit() {
+  const name = document.getElementById('new-habit-name')?.value?.trim();
+  if(!name) return;
+  habits.push({id:Date.now(),name,meta:'Personalizado',pct:0,color:'cyan',streak:0,done:false});
+  saveToStorage();
+  renderHabits();
+}
+
+function cancelAddHabit() {
+  const el = document.getElementById('new-habit-input');
+  if(el) el.remove();
+}
+
+// ── WEEK DOTS ──
+function renderWeekDots() {
+  const days = ['L','M','X','J','V','S','D'];
+  const el = document.getElementById('week-dot-grid');
+  // Actualizar el dot del día actual según los hábitos marcados
+  const todayIdx = (new Date().getDay() + 6) % 7; // 0=Lun...6=Dom
+  const doneFraction = habits.filter(h=>h.done).length / habits.length;
+  weekDots[0].done[todayIdx] = doneFraction >= 0.5 ? 1 : 0; // Madrugada proxy
+  weekDots[2].done[todayIdx] = doneFraction >= 0.3 ? 1 : 0; // Estudio proxy
+
+  el.innerHTML = weekDots.map(r=>`
+    <div class="week-row">
+      <div class="week-row-name">${r.name}</div>
+      <div class="week-dots-row">
+        ${days.map((d,i)=>`<div class="wdot ${r.done[i]?'done '+r.color:''}">${r.done[i]?'✓':d}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── WORKOUT ──
+function renderWorkout() {
+  const el = document.getElementById('workout-grid');
+  el.innerHTML = workouts.map(w=>`
+    <div class="workout-day-card">
+      <div class="workout-day-hdr">
+        <div class="workout-day-name ${w.colorClass}">${w.day}</div>
+        <div class="workout-day-type">${w.type}</div>
+      </div>
+      <div class="workout-exercises">
+        ${w.exercises.map((e,i)=>`
+          <div class="exercise-item">
+            <div class="ex-check" id="ex-${sanitizeId(w.day)}-${i}" onclick="toggleEx('${w.day}',${i})"></div>
+            <div class="ex-info">
+              <div class="ex-name">${e.name}</div>
+              <div class="ex-sets">${e.sets}</div>
+            </div>
+            <div class="ex-muscle">${e.muscle}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="workout-rest-note">⏱ ${w.rest}</div>
+    </div>
+  `).join('');
+}
+
+function sanitizeId(str) {
+  return str.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function toggleEx(day, idx) {
+  const el = document.getElementById(`ex-${sanitizeId(day)}-${idx}`);
+  if(el) el.classList.toggle('done');
+}
+
+// ── SUBJECTS ──
+function renderSubjects() {
+  const el = document.getElementById('subject-grid');
+  el.innerHTML = subjects.map(s=>`
+    <div class="subject-card">
+      <div class="subj-difficulty ${s.diff}">${s.diff.toUpperCase()}</div>
+      <div class="subj-name">${s.name}</div>
+      <div class="subj-technique">${s.technique}</div>
+      <div class="subj-time">
+        <div class="subj-time-dot" style="background:var(--${s.color});box-shadow:0 0 6px var(--${s.color});"></div>
+        ${s.time} · ${s.tip}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── FEEDBACK RATINGS ──
+function renderRatings() {
+  const el = document.getElementById('rating-rows');
+  el.innerHTML = ratingCriteria.map((c,ci)=>`
+    <div class="rating-row">
+      <div class="rating-label">${c}</div>
+      <div class="rating-stars">
+        ${[1,2,3,4,5].map(v=>`<div class="star ${ratingValues[ci]>=v?'active':''}" onclick="setRating(${ci},${v})">${v<=ratingValues[ci]?'★':'☆'}</div>`).join('')}
+      </div>
+      <div class="rating-val">${ratingValues[ci]>0?ratingValues[ci]+'/5':''}</div>
+    </div>
+  `).join('');
+  const avg = ratingValues.filter(v=>v>0).length ?
+    (ratingValues.reduce((a,b)=>a+b,0)/ratingValues.filter(v=>v>0).length).toFixed(1) : '0.0';
+  document.getElementById('global-score').textContent = avg;
+  const labels = ['Califica los criterios arriba','Necesita mejorar mucho','Por debajo del objetivo','Progresando bien','¡Excelente semana!','¡Semana perfecta! Sube la dificultad'];
+  document.getElementById('global-label').textContent = labels[Math.round(parseFloat(avg))];
+}
+
+function setRating(ci, val) {
+  ratingValues[ci] = val;
+  saveToStorage();
+  renderRatings();
+}
+
+// ── PERSISTENCIA LOCAL ──
+function saveToStorage() {
+  try {
+    localStorage.setItem('nexus_habits', JSON.stringify(habits.map(h=>({id:h.id,done:h.done,streak:h.streak,name:h.name,meta:h.meta,color:h.color}))));
+    localStorage.setItem('nexus_pom_minutes', String(pomAccumulatedMinutes));
+    localStorage.setItem('nexus_ratings', JSON.stringify(ratingValues));
+    localStorage.setItem('nexus_save_date', new Date().toDateString());
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    // Si cambió el día, resetear hábitos completados del día anterior
+    const savedDate = localStorage.getItem('nexus_save_date');
+    const today = new Date().toDateString();
+    const newDay = savedDate && savedDate !== today;
+
+    const savedHabits = JSON.parse(localStorage.getItem('nexus_habits') || '[]');
+    savedHabits.forEach(sh => {
+      const h = habits.find(x => x.id === sh.id);
+      if(h) {
+        h.streak = sh.streak || 1;
+        h.done = newDay ? false : (sh.done || false);
+        if(sh.name && !habits.find(x=>x.name===sh.name && x.id!==sh.id)) {
+          h.name = sh.name;
+          h.meta = sh.meta;
+          h.color = sh.color;
+        }
+      }
+    });
+    // Cargar hábitos personalizados que no estén en la lista original
+    savedHabits.forEach(sh => {
+      if(!habits.find(x=>x.id===sh.id)) {
+        habits.push({id:sh.id,name:sh.name,meta:sh.meta,pct:0,color:sh.color||'cyan',streak:sh.streak||1,done:newDay?false:sh.done});
+      }
+    });
+
+    pomAccumulatedMinutes = newDay ? 0 : (parseInt(localStorage.getItem('nexus_pom_minutes') || '0', 10) || 0);
+    const savedRatings = JSON.parse(localStorage.getItem('nexus_ratings') || '[]');
+    if(savedRatings.length === ratingValues.length) ratingValues = savedRatings;
+  } catch(e) {}
+}
+
+let pomAccumulatedMinutes = 0;
+
+function updateStudyStatDisplay() {
+  const el = document.getElementById('stat-study');
+  if(el) el.innerHTML = `${pomAccumulatedMinutes}<span style="font-size:16px;opacity:.5">/80</span>`;
+}
+// ── POMODORO ──
+let pomMinutes = 25, pomSeconds = 0, pomRunning = false, pomInterval = null;
+let pomWorkMin = 25;
+
+function setPomMode(work, rest, btn) {
+  document.querySelectorAll('.pom-mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  pomWorkMin = work;
+  resetPom();
+}
+
+function togglePom() {
+  if(pomRunning) {
+    clearInterval(pomInterval);
+    pomRunning = false;
+    document.querySelector('.pom-btn.start').textContent = '▶ CONTINUAR';
+  } else {
+    pomRunning = true;
+    document.querySelector('.pom-btn.start').textContent = '⏸ PAUSAR';
+    const startMinutes = pomMinutes;
+    const startSeconds = pomSeconds;
+    pomInterval = setInterval(() => {
+      if(pomSeconds === 0) {
+        if(pomMinutes === 0) {
+          clearInterval(pomInterval);
+          pomRunning = false;
+          document.querySelector('.pom-btn.start').textContent = '▶ INICIAR';
+          document.getElementById('pom-display').textContent = '¡LISTO!';
+          // Acumular minutos completados
+          pomAccumulatedMinutes += pomWorkMin;
+          updateStudyStatDisplay();
+          saveToStorage();
+          return;
+        }
+        pomMinutes--;
+        pomSeconds = 59;
+      } else {
+        pomSeconds--;
+      }
+      updatePomDisplay();
+    }, 1000);
+  }
+}
+
+function resetPom() {
+  clearInterval(pomInterval);
+  pomRunning = false;
+  pomMinutes = pomWorkMin;
+  pomSeconds = 0;
+  updatePomDisplay();
+  document.querySelector('.pom-btn.start').textContent = '▶ INICIAR';
+}
+
+function updatePomDisplay() {
+  document.getElementById('pom-display').textContent =
+    String(pomMinutes).padStart(2,'0') + ':' + String(pomSeconds).padStart(2,'0');
+}
+
+// ── RESALTAR DÍA ACTUAL EN CRONOGRAMA ──
+function highlightTodayColumn() {
+  const dayMap = {0:'dom',1:'lun',2:'mar',3:'mie',4:'jue',5:'vie',6:'sab'};
+  const todayKey = dayMap[new Date().getDay()];
+  const el = document.getElementById('day-hdr-'+todayKey);
+  if(el) el.classList.add('today');
+}
+
+// ── CLOCK ──
+const insights = [
+  '"La disciplina no es un destino — es el hábito de elegir el esfuerzo cuando el cerebro pide comodidad."',
+  '"Cada madrugada a las 4 AM es una ventaja que el 99% de tus compañeros nunca verán."',
+  '"La constancia no es hacer cosas perfectas — es hacer las cosas necesarias, incluso en los días imperfectos."',
+  '"Tu cerebro a las 4 AM es literalmente más inteligente que a las 9 PM. Úsalo."',
+  '"La masa muscular y el conocimiento tienen algo en común: ambos requieren tensión sostenida para crecer."',
+];
+
+function updateClock() {
+  const now = new Date();
+  const days = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+  const d = days[now.getDay()];
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yy = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mi = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('datechip').textContent = `${d} ${dd}.${mm}.${yy} // ${hh}:${mi}:${ss}`;
+}
+
+// ── INIT ──
+loadFromStorage();
+renderHabits();
+renderWeekDots();
+renderWorkout();
+renderSubjects();
+renderRatings();
+highlightTodayColumn();
+updateStudyStatDisplay();
+setInterval(updateClock, 1000);
+updateClock();
+document.getElementById('insight-text').textContent = insights[Math.floor(Math.random()*insights.length)];
+
+// ════════════════════════════════════════════════
+// ══  SISTEMA DE EXTENSIONES — NEXUS MARKETPLACE  ══
+// ════════════════════════════════════════════════
+
+// ── CATÁLOGO DE EXTENSIONES ──
+const EXTENSION_CATALOG = [
+  {
+    id: 'quick-notes',
+    name: 'Notas Rápidas',
+    desc: 'Widget para anotar ideas, tareas o recordatorios rápidos directamente en tu dashboard.',
+    icon: '📝',
+    type: 'widget',
+    color: 'cyan',
+    author: 'NEXUS CORE',
+    render: renderQuickNotes,
+  },
+  {
+    id: 'water-tracker',
+    name: 'Hidratación',
+    desc: 'Contador visual de vasos de agua. Registra tu consumo diario con un clic por vaso.',
+    icon: '💧',
+    type: 'widget',
+    color: 'cyan',
+    author: 'NEXUS CORE',
+    render: renderWaterTracker,
+  },
+  {
+    id: 'gpa-calc',
+    name: 'Calculadora de Notas',
+    desc: 'Calcula tu promedio ponderado ingresando las notas y créditos de cada materia.',
+    icon: '🎓',
+    type: 'widget',
+    color: 'purple',
+    author: 'NEXUS CORE',
+    render: renderGpaCalc,
+  },
+  {
+    id: 'music-focus',
+    name: 'Música Focus',
+    desc: 'Selecciona ambientes sonoros para estudio: lluvia, café, bosque o ruido blanco.',
+    icon: '🎵',
+    type: 'widget',
+    color: 'emerald',
+    author: 'NEXUS CORE',
+    render: renderMusicFocus,
+  },
+  {
+    id: 'goals',
+    name: 'Metas y Objetivos',
+    desc: 'Pestaña completa para definir, visualizar y trackear tus metas académicas y personales.',
+    icon: '🎯',
+    type: 'tab',
+    tabLabel: '◎ Metas',
+    tabId: 'goals',
+    color: 'amber',
+    author: 'NEXUS CORE',
+    render: renderGoalsTab,
+  },
+  {
+    id: 'nutrition',
+    name: 'Nutrición',
+    desc: 'Pestaña para planear y registrar tus comidas diarias con macros y calorías.',
+    icon: '🥗',
+    type: 'tab',
+    tabLabel: '◈ Nutrición',
+    tabId: 'nutrition',
+    color: 'emerald',
+    author: 'NEXUS CORE',
+    render: renderNutritionTab,
+  },
+  {
+    id: 'mindmap',
+    name: 'Ideas Mentales',
+    desc: 'Pestaña para capturar ideas, reflexiones y conexiones conceptuales en formato libre.',
+    icon: '🧩',
+    type: 'tab',
+    tabLabel: '⊕ Ideas',
+    tabId: 'mindmap',
+    color: 'purple',
+    author: 'NEXUS CORE',
+    render: renderMindmapTab,
+  },
+  // ── APPS REALES ──
+  {
+    id: 'ext-notion',
+    name: 'Notion',
+    desc: 'Abre tu workspace de Notion directo en una pestaña. Notas, bases de datos y wikis de estudio.',
+    icon: '🗒️',
+    type: 'external',
+    tabLabel: '◈ Notion',
+    tabId: 'ext-notion',
+    color: 'cyan',
+    author: 'Notion Labs',
+    appUrl: 'https://www.notion.so',
+    render: (c) => renderExternalApp(c, {
+      name: 'Notion', icon: '🗒️', color: 'var(--cyan)',
+      appUrl: 'https://www.notion.so',
+      desc: 'Tu workspace todo-en-uno: notas, tareas, wikis y bases de datos.',
+      quicklinks: [
+        { label: 'Abrir Notion', url: 'https://www.notion.so', icon: '🗒️' },
+        { label: 'Nueva página', url: 'https://www.notion.so/new', icon: '➕' },
+        { label: 'Templates', url: 'https://www.notion.so/templates', icon: '📋' },
+        { label: 'Calendar', url: 'https://www.notion.so/calendar', icon: '📅' },
+      ],
+      tips: ['Usa /table para crear una base de datos','Cmd+P para buscar cualquier página','Arrastra bloques con ⠿ para reorganizar'],
+    }),
+  },
+  {
+    id: 'ext-gcalendar',
+    name: 'Google Calendar',
+    desc: 'Visualiza y gestiona tu agenda semanal directamente desde NEXUS.',
+    icon: '📅',
+    type: 'external',
+    tabLabel: '◈ Calendario',
+    tabId: 'ext-gcalendar',
+    color: 'emerald',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'Google Calendar', icon: '📅', color: 'var(--emerald)',
+      appUrl: 'https://calendar.google.com',
+      desc: 'Agenda tus clases, entrenamientos y sesiones de estudio en tu calendario.',
+      quicklinks: [
+        { label: 'Mi Calendario', url: 'https://calendar.google.com', icon: '📅' },
+        { label: 'Nuevo evento', url: 'https://calendar.google.com/calendar/r/eventedit', icon: '➕' },
+        { label: 'Vista semana', url: 'https://calendar.google.com/calendar/r/week', icon: '📆' },
+        { label: 'Vista mes', url: 'https://calendar.google.com/calendar/r/month', icon: '🗓️' },
+      ],
+      tips: ['Activa notificaciones 10 min antes de cada evento','Usa colores por categoría: rojo=clases, verde=gym','Comparte tu calendario con compañeros de estudio'],
+    }),
+  },
+  {
+    id: 'ext-youtube',
+    name: 'YouTube',
+    desc: 'Accede rápido a canales educativos: 3Blue1Brown, Kurzgesagt, MIT OpenCourseWare y más.',
+    icon: '▶️',
+    type: 'external',
+    tabLabel: '▶ YouTube',
+    tabId: 'ext-youtube',
+    color: 'red',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'YouTube Edu', icon: '▶️', color: 'var(--red-alert)',
+      appUrl: 'https://www.youtube.com',
+      desc: 'Canales educativos recomendados para tus materias de CTP.',
+      quicklinks: [
+        { label: '3Blue1Brown (Mat.)', url: 'https://www.youtube.com/@3blue1brown', icon: '🔵' },
+        { label: 'Khan Academy ES', url: 'https://www.youtube.com/@KhanAcademyEspanol', icon: '🎓' },
+        { label: 'Kurzgesagt (Bio/Qui.)', url: 'https://www.youtube.com/@kurzgesagt', icon: '🐦' },
+        { label: 'MIT OpenCourse', url: 'https://www.youtube.com/@mitocw', icon: '🏛️' },
+        { label: 'Física o Química', url: 'https://www.youtube.com/results?search_query=quimica+secundaria', icon: '⚗️' },
+        { label: 'Matemáticas Paul', url: 'https://www.youtube.com/results?search_query=matematicas+bachillerato', icon: '📐' },
+      ],
+      tips: ['Ajusta velocidad a 1.25x para repasos rápidos','Usa Ctrl+K para buscar dentro de un video','Activa subtítulos automáticos para idiomas'],
+    }),
+  },
+  {
+    id: 'ext-khan',
+    name: 'Khan Academy',
+    desc: 'Plataforma gratuita con ejercicios y videos de Matemáticas, Química, Biología y más.',
+    icon: '🎓',
+    type: 'external',
+    tabLabel: '⊕ Khan',
+    tabId: 'ext-khan',
+    color: 'amber',
+    author: 'Khan Academy',
+    render: (c) => renderExternalApp(c, {
+      name: 'Khan Academy', icon: '🎓', color: 'var(--amber)',
+      appUrl: 'https://es.khanacademy.org',
+      desc: 'Aprende y practica Matemáticas, Ciencias y más — totalmente gratis.',
+      quicklinks: [
+        { label: 'Inicio', url: 'https://es.khanacademy.org', icon: '🏠' },
+        { label: 'Matemáticas', url: 'https://es.khanacademy.org/math', icon: '📐' },
+        { label: 'Química', url: 'https://es.khanacademy.org/science/chemistry', icon: '⚗️' },
+        { label: 'Biología', url: 'https://es.khanacademy.org/science/biology', icon: '🔬' },
+        { label: 'Programación', url: 'https://es.khanacademy.org/computing', icon: '💻' },
+        { label: 'Mi progreso', url: 'https://es.khanacademy.org/profile/me/progress', icon: '📊' },
+      ],
+      tips: ['Completa los ejercicios después de cada video','El sistema de puntos gamifica tu estudio','Úsalo 20 min al día para repasar lo difícil'],
+    }),
+  },
+  {
+    id: 'ext-duolingo',
+    name: 'Duolingo',
+    desc: 'Practica inglés 10 minutos al día. Mantén tu racha y sube de nivel.',
+    icon: '🦜',
+    type: 'external',
+    tabLabel: '🦜 Duolingo',
+    tabId: 'ext-duolingo',
+    color: 'emerald',
+    author: 'Duolingo',
+    render: (c) => renderExternalApp(c, {
+      name: 'Duolingo', icon: '🦜', color: 'var(--emerald)',
+      appUrl: 'https://www.duolingo.com',
+      desc: 'Aprende inglés con lecciones cortas y divertidas. 10 min al día es suficiente.',
+      quicklinks: [
+        { label: 'Practicar ahora', url: 'https://www.duolingo.com/learn', icon: '▶️' },
+        { label: 'Mi perfil', url: 'https://www.duolingo.com/profile', icon: '👤' },
+        { label: 'Tabla de posiciones', url: 'https://www.duolingo.com/leaderboard', icon: '🏆' },
+        { label: 'Historia', url: 'https://www.duolingo.com/stories', icon: '📖' },
+      ],
+      tips: ['Haz tu lección antes de las 8 AM para mantener la racha','Practica pronunciación en voz alta','Comparte tu racha con amigos para motivarte'],
+    }),
+  },
+  {
+    id: 'ext-desmos',
+    name: 'Desmos',
+    desc: 'Calculadora gráfica avanzada en el navegador. Ideal para Matemáticas y Física.',
+    icon: '📈',
+    type: 'external',
+    tabLabel: '📈 Desmos',
+    tabId: 'ext-desmos',
+    color: 'purple',
+    author: 'Desmos Studio',
+    render: (c) => renderExternalApp(c, {
+      name: 'Desmos', icon: '📈', color: 'var(--purple)',
+      appUrl: 'https://www.desmos.com/calculator',
+      desc: 'Grafica funciones, resuelve ecuaciones y explora conceptos matemáticos visualmente.',
+      quicklinks: [
+        { label: 'Calculadora Gráfica', url: 'https://www.desmos.com/calculator', icon: '📈' },
+        { label: 'Geometría', url: 'https://www.desmos.com/geometry', icon: '📐' },
+        { label: 'Calculadora Científica', url: 'https://www.desmos.com/scientific', icon: '🔢' },
+        { label: 'Actividades', url: 'https://teacher.desmos.com/activitybuilder/public', icon: '🎯' },
+      ],
+      tips: ['Escribe y(x)=... para graficar cualquier función','Deslizadores para visualizar parámetros','Guarda tus gráficas con una cuenta gratuita'],
+    }),
+  },
+  {
+    id: 'ext-chatgpt',
+    name: 'ChatGPT',
+    desc: 'Asistente IA de OpenAI. Explica conceptos difíciles, corrige textos y genera ejemplos.',
+    icon: '🤖',
+    type: 'external',
+    tabLabel: '🤖 ChatGPT',
+    tabId: 'ext-chatgpt',
+    color: 'emerald',
+    author: 'OpenAI',
+    render: (c) => renderExternalApp(c, {
+      name: 'ChatGPT', icon: '🤖', color: 'var(--emerald)',
+      appUrl: 'https://chat.openai.com',
+      desc: 'IA para explicar conceptos, resumir textos, corregir redacciones y resolver dudas.',
+      quicklinks: [
+        { label: 'Nueva conversación', url: 'https://chat.openai.com', icon: '➕' },
+        { label: 'Mis chats', url: 'https://chat.openai.com', icon: '💬' },
+        { label: 'GPT-4o', url: 'https://chat.openai.com/?model=gpt-4o', icon: '⚡' },
+        { label: 'Explorar GPTs', url: 'https://chat.openai.com/gpts', icon: '🔍' },
+      ],
+      tips: [
+        'Pídele: "Explícame [tema] como si tuviera 15 años"',
+        'Úsalo para corregir tus redacciones de Español',
+        'Prompt: "Dame 10 preguntas de práctica sobre [materia]"',
+      ],
+    }),
+  },
+  {
+    id: 'ext-claude',
+    name: 'Claude (Anthropic)',
+    desc: 'IA de Anthropic, ideal para análisis profundo, escritura y razonamiento complejo.',
+    icon: '✦',
+    type: 'external',
+    tabLabel: '✦ Claude',
+    tabId: 'ext-claude',
+    color: 'amber',
+    author: 'Anthropic',
+    render: (c) => renderExternalApp(c, {
+      name: 'Claude', icon: '✦', color: 'var(--amber)',
+      appUrl: 'https://claude.ai',
+      desc: 'IA especializada en razonamiento, análisis de documentos y escritura de alta calidad.',
+      quicklinks: [
+        { label: 'Nuevo chat', url: 'https://claude.ai/new', icon: '➕' },
+        { label: 'Mis chats', url: 'https://claude.ai/chats', icon: '💬' },
+        { label: 'Proyectos', url: 'https://claude.ai/projects', icon: '📁' },
+      ],
+      tips: [
+        'Sube un PDF de tu libro de texto para que lo analice',
+        'Ideal para redacciones largas y argumentativas',
+        'Pídele que cree flashcards de cualquier tema',
+      ],
+    }),
+  },
+  {
+    id: 'ext-gdocs',
+    name: 'Google Docs',
+    desc: 'Redacta, edita y colabora en documentos en tiempo real desde cualquier dispositivo.',
+    icon: '📄',
+    type: 'external',
+    tabLabel: '📄 Docs',
+    tabId: 'ext-gdocs',
+    color: 'cyan',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'Google Docs', icon: '📄', color: 'var(--cyan)',
+      appUrl: 'https://docs.google.com',
+      desc: 'Escribe ensayos, informes y apuntes colaborativos con guardado automático en la nube.',
+      quicklinks: [
+        { label: 'Mis documentos', url: 'https://docs.google.com/document/u/0/', icon: '📄' },
+        { label: 'Nuevo doc', url: 'https://docs.google.com/document/create', icon: '➕' },
+        { label: 'Google Drive', url: 'https://drive.google.com', icon: '☁️' },
+        { label: 'Compartidos', url: 'https://drive.google.com/drive/shared-with-me', icon: '👥' },
+      ],
+      tips: [
+        'Ctrl+Alt+M para insertar comentarios en tu texto',
+        'Herramientas → Voz para dictar en lugar de escribir',
+        'Usa plantillas de informe para entregas escolares',
+      ],
+    }),
+  },
+  {
+    id: 'ext-gsheets',
+    name: 'Google Sheets',
+    desc: 'Hojas de cálculo en la nube. Controla gastos, notas, horarios y más.',
+    icon: '📊',
+    type: 'external',
+    tabLabel: '📊 Sheets',
+    tabId: 'ext-gsheets',
+    color: 'emerald',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'Google Sheets', icon: '📊', color: 'var(--emerald)',
+      appUrl: 'https://sheets.google.com',
+      desc: 'Organiza tus notas, presupuesto personal y seguimiento de progreso académico.',
+      quicklinks: [
+        { label: 'Mis hojas', url: 'https://sheets.google.com', icon: '📊' },
+        { label: 'Nueva hoja', url: 'https://sheets.google.com/create', icon: '➕' },
+        { label: 'Plantillas', url: 'https://docs.google.com/spreadsheets/u/0/?ftv=1', icon: '📋' },
+      ],
+      tips: [
+        '=PROMEDIO(B2:B10) para calcular tu promedio automáticamente',
+        'Usa formato condicional para resaltar notas bajas en rojo',
+        'Ctrl+Shift+V para pegar solo valores sin formato',
+      ],
+    }),
+  },
+  {
+    id: 'ext-gslides',
+    name: 'Google Slides',
+    desc: 'Crea presentaciones visuales para exposiciones y proyectos escolares.',
+    icon: '🎞️',
+    type: 'external',
+    tabLabel: '🎞️ Slides',
+    tabId: 'ext-gslides',
+    color: 'amber',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'Google Slides', icon: '🎞️', color: 'var(--amber)',
+      appUrl: 'https://slides.google.com',
+      desc: 'Diseña presentaciones profesionales para tus exposiciones y entregas escolares.',
+      quicklinks: [
+        { label: 'Mis presentaciones', url: 'https://slides.google.com', icon: '🎞️' },
+        { label: 'Nueva presentación', url: 'https://slides.google.com/create', icon: '➕' },
+        { label: 'Plantillas', url: 'https://docs.google.com/presentation/u/0/?ftv=1', icon: '🎨' },
+      ],
+      tips: [
+        'Regla de 6x6: máx 6 líneas por slide, 6 palabras por línea',
+        'Ctrl+Shift+P para iniciar presentación desde el inicio',
+        'Importa imágenes de Google directamente con Insertar → Imagen',
+      ],
+    }),
+  },
+  {
+    id: 'ext-anki',
+    name: 'Anki Web',
+    desc: 'Sistema de flashcards con repetición espaciada. El método más eficiente para memorizar.',
+    icon: '🃏',
+    type: 'external',
+    tabLabel: '🃏 Anki',
+    tabId: 'ext-anki',
+    color: 'purple',
+    author: 'Anki',
+    render: (c) => renderExternalApp(c, {
+      name: 'AnkiWeb', icon: '🃏', color: 'var(--purple)',
+      appUrl: 'https://ankiweb.net',
+      desc: 'Flashcards con repetición espaciada: estudia solo lo que estás a punto de olvidar.',
+      quicklinks: [
+        { label: 'Estudiar ahora', url: 'https://ankiweb.net/decks', icon: '▶️' },
+        { label: 'Mis mazos', url: 'https://ankiweb.net/decks', icon: '🃏' },
+        { label: 'Añadir tarjeta', url: 'https://ankiweb.net/edit', icon: '➕' },
+        { label: 'Estadísticas', url: 'https://ankiweb.net/stats', icon: '📊' },
+      ],
+      tips: [
+        'Crea un mazo por materia: Química, Biología, Inglés',
+        'Repasa 15 min cada mañana antes del estudio principal',
+        'Usa "Bueno" con honestidad — no te trampees',
+      ],
+    }),
+  },
+  {
+    id: 'ext-quizlet',
+    name: 'Quizlet',
+    desc: 'Sets de flashcards, tests y juegos de memoria. Millones de sets ya creados para estudiar.',
+    icon: '⚡',
+    type: 'external',
+    tabLabel: '⚡ Quizlet',
+    tabId: 'ext-quizlet',
+    color: 'cyan',
+    author: 'Quizlet Inc.',
+    render: (c) => renderExternalApp(c, {
+      name: 'Quizlet', icon: '⚡', color: 'var(--cyan)',
+      appUrl: 'https://quizlet.com',
+      desc: 'Aprende con flashcards, tests y juegos. Busca sets de tu materia ya listos.',
+      quicklinks: [
+        { label: 'Inicio', url: 'https://quizlet.com/latest', icon: '🏠' },
+        { label: 'Buscar sets', url: 'https://quizlet.com/search?query=quimica+bachillerato', icon: '🔍' },
+        { label: 'Crear set', url: 'https://quizlet.com/create-set', icon: '➕' },
+        { label: 'Modo Test', url: 'https://quizlet.com/latest', icon: '📝' },
+        { label: 'Modo Match', url: 'https://quizlet.com/latest', icon: '🎯' },
+      ],
+      tips: [
+        'Busca "[nombre materia] CTP" para encontrar sets locales',
+        'Modo "Learn" es más efectivo que solo repasar tarjetas',
+        'Activa "sonidos" para asociar respuestas con audio',
+      ],
+    }),
+  },
+  {
+    id: 'ext-wolframalpha',
+    name: 'Wolfram Alpha',
+    desc: 'Motor de computación: resuelve ecuaciones, derivadas, química, estadística y más.',
+    icon: '🔣',
+    type: 'external',
+    tabLabel: '🔣 Wolfram',
+    tabId: 'ext-wolframalpha',
+    color: 'red',
+    author: 'Wolfram Research',
+    render: (c) => renderExternalApp(c, {
+      name: 'Wolfram Alpha', icon: '🔣', color: 'var(--red-alert)',
+      appUrl: 'https://www.wolframalpha.com',
+      desc: 'Resuelve matemáticas paso a paso: ecuaciones, integrales, química, física y estadística.',
+      quicklinks: [
+        { label: 'Calculadora', url: 'https://www.wolframalpha.com', icon: '🔢' },
+        { label: 'Matemáticas', url: 'https://www.wolframalpha.com/examples/mathematics', icon: '📐' },
+        { label: 'Química', url: 'https://www.wolframalpha.com/examples/science/chemistry', icon: '⚗️' },
+        { label: 'Física', url: 'https://www.wolframalpha.com/examples/science/physics', icon: '⚡' },
+        { label: 'Estadística', url: 'https://www.wolframalpha.com/examples/mathematics/statistics', icon: '📊' },
+      ],
+      tips: [
+        'Escribe "solve x^2 + 5x = 6" para ver pasos detallados',
+        'Ingresa fórmulas químicas como "H2O" para ver propiedades',
+        'Pregunta "derivative of sin(x)*cos(x)" para cálculo',
+      ],
+    }),
+  },
+  {
+    id: 'ext-github',
+    name: 'GitHub',
+    desc: 'Guarda y versiona tu código. Indispensable para SO y Redes y proyectos de programación.',
+    icon: '🐙',
+    type: 'external',
+    tabLabel: '🐙 GitHub',
+    tabId: 'ext-github',
+    color: 'cyan',
+    author: 'GitHub / Microsoft',
+    render: (c) => renderExternalApp(c, {
+      name: 'GitHub', icon: '🐙', color: 'var(--cyan)',
+      appUrl: 'https://github.com',
+      desc: 'Controla versiones de tu código, colabora en proyectos y construye tu portafolio.',
+      quicklinks: [
+        { label: 'Mi perfil', url: 'https://github.com', icon: '👤' },
+        { label: 'Mis repos', url: 'https://github.com?tab=repositories', icon: '📁' },
+        { label: 'Nuevo repo', url: 'https://github.com/new', icon: '➕' },
+        { label: 'GitHub Copilot', url: 'https://github.com/features/copilot', icon: '🤖' },
+        { label: 'GitHub Pages', url: 'https://pages.github.com', icon: '🌐' },
+      ],
+      tips: [
+        'git commit -m "descripción clara" — sé específico siempre',
+        'Usa ramas (branches) para experimentar sin romper tu código',
+        'README.md bien escrito = portafolio profesional gratis',
+      ],
+    }),
+  },
+  {
+    id: 'ext-replit',
+    name: 'Replit',
+    desc: 'IDE en el navegador. Programa en Python, JS, C++ y más sin instalar nada.',
+    icon: '💻',
+    type: 'external',
+    tabLabel: '💻 Replit',
+    tabId: 'ext-replit',
+    color: 'amber',
+    author: 'Replit Inc.',
+    render: (c) => renderExternalApp(c, {
+      name: 'Replit', icon: '💻', color: 'var(--amber)',
+      appUrl: 'https://replit.com',
+      desc: 'Programa directamente en el navegador sin configuración. Perfecto para practicar AYSAC.',
+      quicklinks: [
+        { label: 'Mis repls', url: 'https://replit.com/repls', icon: '📁' },
+        { label: 'Nuevo repl', url: 'https://replit.com/new', icon: '➕' },
+        { label: 'Python', url: 'https://replit.com/new/python3', icon: '🐍' },
+        { label: 'JavaScript', url: 'https://replit.com/new/nodejs', icon: '🟨' },
+        { label: 'Proyectos guiados', url: 'https://replit.com/learn', icon: '🎓' },
+      ],
+      tips: [
+        'Crea un repl por práctica de laboratorio para SO',
+        'Comparte el link directamente — no necesitas .zip',
+        'Usa el Debugger integrado para encontrar errores línea a línea',
+      ],
+    }),
+  },
+  {
+    id: 'ext-translate',
+    name: 'Google Traductor',
+    desc: 'Traduce textos, palabras y páginas web. Imprescindible para Inglés.',
+    icon: '🌐',
+    type: 'external',
+    tabLabel: '🌐 Traductor',
+    tabId: 'ext-translate',
+    color: 'cyan',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'Google Traductor', icon: '🌐', color: 'var(--cyan)',
+      appUrl: 'https://translate.google.com',
+      desc: 'Traduce entre 130+ idiomas. Incluye pronunciación, ejemplos y traducción de imágenes.',
+      quicklinks: [
+        { label: 'Traducir texto', url: 'https://translate.google.com/?sl=en&tl=es', icon: '✍️' },
+        { label: 'Inglés → Español', url: 'https://translate.google.com/?sl=en&tl=es', icon: '🇺🇸' },
+        { label: 'Español → Inglés', url: 'https://translate.google.com/?sl=es&tl=en', icon: '🇨🇷' },
+        { label: 'Traducir documento', url: 'https://translate.google.com/?op=docs', icon: '📄' },
+      ],
+      tips: [
+        'Haz clic en el altavoz para escuchar la pronunciación correcta',
+        'Traduce tu redacción completa para verificar coherencia',
+        'Usa la app móvil para traducir texto de fotos con la cámara',
+      ],
+    }),
+  },
+  {
+    id: 'ext-deepl',
+    name: 'DeepL',
+    desc: 'Traductor IA de alta calidad, mejor que Google para textos formales y técnicos.',
+    icon: '🔵',
+    type: 'external',
+    tabLabel: '🔵 DeepL',
+    tabId: 'ext-deepl',
+    color: 'purple',
+    author: 'DeepL SE',
+    render: (c) => renderExternalApp(c, {
+      name: 'DeepL Traductor', icon: '🔵', color: 'var(--purple)',
+      appUrl: 'https://www.deepl.com/translator',
+      desc: 'Traducciones de mayor calidad para ensayos, textos técnicos y composiciones en inglés.',
+      quicklinks: [
+        { label: 'Traducir', url: 'https://www.deepl.com/translator', icon: '✍️' },
+        { label: 'DeepL Write', url: 'https://www.deepl.com/write', icon: '✏️' },
+        { label: 'Traducir PDF', url: 'https://www.deepl.com/translator#en/es/', icon: '📄' },
+      ],
+      tips: [
+        'DeepL Write corrige tu gramática en inglés automáticamente',
+        'Haz clic en palabras subrayadas para ver sinónimos alternativos',
+        'Ideal para traducir libros de texto técnicos de Química/Biología',
+      ],
+    }),
+  },
+  {
+    id: 'ext-spotify',
+    name: 'Spotify',
+    desc: 'Música, podcasts y playlists de estudio. Lo-fi, música clásica y ruido blanco.',
+    icon: '🎧',
+    type: 'external',
+    tabLabel: '🎧 Spotify',
+    tabId: 'ext-spotify',
+    color: 'emerald',
+    author: 'Spotify AB',
+    render: (c) => renderExternalApp(c, {
+      name: 'Spotify', icon: '🎧', color: 'var(--emerald)',
+      appUrl: 'https://open.spotify.com',
+      desc: 'Playlists curadas para concentración, lo-fi para estudio y podcasts educativos.',
+      quicklinks: [
+        { label: 'Abrir Spotify', url: 'https://open.spotify.com', icon: '▶️' },
+        { label: 'Lo-fi Beats', url: 'https://open.spotify.com/playlist/0vvXsWCC9xrXsKd4eZs7N4', icon: '🎵' },
+        { label: 'Focus Flow', url: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ', icon: '🧠' },
+        { label: 'Música Clásica', url: 'https://open.spotify.com/playlist/37i9dQZF1DWWEJlAGA9gs0', icon: '🎹' },
+        { label: 'Deep Focus', url: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ', icon: '🔵' },
+      ],
+      tips: [
+        'Lo-fi y clásica son mejores que música con letra para concentrarse',
+        'Crea una playlist "Modo Batalla" solo para estudiar materias difíciles',
+        'Podcasts en inglés = practicar inglés mientras haces otras tareas',
+      ],
+    }),
+  },
+  {
+    id: 'ext-todoist',
+    name: 'Todoist',
+    desc: 'Gestión de tareas avanzada con fechas, prioridades y proyectos. Tu segundo cerebro.',
+    icon: '✅',
+    type: 'external',
+    tabLabel: '✅ Todoist',
+    tabId: 'ext-todoist',
+    color: 'red',
+    author: 'Doist Inc.',
+    render: (c) => renderExternalApp(c, {
+      name: 'Todoist', icon: '✅', color: 'var(--red-alert)',
+      appUrl: 'https://todoist.com/app',
+      desc: 'Organiza tareas escolares con fechas límite, prioridades y proyectos por materia.',
+      quicklinks: [
+        { label: 'Mis tareas', url: 'https://todoist.com/app/today', icon: '📋' },
+        { label: 'Nueva tarea', url: 'https://todoist.com/app/today', icon: '➕' },
+        { label: 'Próximos 7 días', url: 'https://todoist.com/app/upcoming', icon: '📅' },
+        { label: 'Proyectos', url: 'https://todoist.com/app/projects', icon: '📁' },
+      ],
+      tips: [
+        'Crea un proyecto por materia: Matemáticas, Química, etc.',
+        'Usa prioridad P1 (rojo) solo para entregas de hoy',
+        'Escribe "mañana" o "lunes" en la tarea — detecta fechas automáticamente',
+      ],
+    }),
+  },
+  {
+    id: 'ext-trello',
+    name: 'Trello',
+    desc: 'Tablero Kanban para organizar proyectos y trabajos grupales de forma visual.',
+    icon: '📋',
+    type: 'external',
+    tabLabel: '📋 Trello',
+    tabId: 'ext-trello',
+    color: 'cyan',
+    author: 'Atlassian',
+    render: (c) => renderExternalApp(c, {
+      name: 'Trello', icon: '📋', color: 'var(--cyan)',
+      appUrl: 'https://trello.com/app',
+      desc: 'Organiza proyectos en columnas: Por hacer → En progreso → Listo. Ideal para trabajos grupales.',
+      quicklinks: [
+        { label: 'Mis tableros', url: 'https://trello.com/app', icon: '📋' },
+        { label: 'Nuevo tablero', url: 'https://trello.com/createBoard', icon: '➕' },
+        { label: 'Plantillas', url: 'https://trello.com/templates', icon: '🎨' },
+      ],
+      tips: [
+        'Crea columnas: "Esta semana / En progreso / Revisión / Entregado"',
+        'Asigna colores por materia para identificar tareas de un vistazo',
+        'Invita a compañeros al tablero para proyectos grupales',
+      ],
+    }),
+  },
+  {
+    id: 'ext-wikipedia',
+    name: 'Wikipedia',
+    desc: 'La enciclopedia libre más grande del mundo. Primera parada para cualquier tema nuevo.',
+    icon: '📚',
+    type: 'external',
+    tabLabel: '📚 Wikipedia',
+    tabId: 'ext-wikipedia',
+    color: 'cyan',
+    author: 'Wikimedia Foundation',
+    render: (c) => renderExternalApp(c, {
+      name: 'Wikipedia', icon: '📚', color: 'var(--cyan)',
+      appUrl: 'https://es.wikipedia.org',
+      desc: 'Punto de partida para cualquier tema. Usa las referencias al final para fuentes confiables.',
+      quicklinks: [
+        { label: 'Wikipedia ES', url: 'https://es.wikipedia.org', icon: '🌎' },
+        { label: 'Wikipedia EN', url: 'https://en.wikipedia.org', icon: '🌍' },
+        { label: 'Artículo aleatorio', url: 'https://es.wikipedia.org/wiki/Especial:Aleatoria', icon: '🎲' },
+        { label: 'Wikilibros', url: 'https://es.wikibooks.org', icon: '📖' },
+        { label: 'Wikiversidad', url: 'https://es.wikiversity.org', icon: '🎓' },
+      ],
+      tips: [
+        'Nunca cites Wikipedia directamente — usa sus fuentes al final del artículo',
+        'La versión en inglés suele ser más completa y actualizada',
+        'Wikiversidad tiene cursos y ejercicios gratuitos',
+      ],
+    }),
+  },
+  {
+    id: 'ext-timer',
+    name: 'Temporizador Online',
+    desc: 'Temporizador y cronómetro web para medir tus sesiones de estudio y descanso.',
+    icon: '⏱️',
+    type: 'external',
+    tabLabel: '⏱️ Timer',
+    tabId: 'ext-timer',
+    color: 'amber',
+    author: 'Timer.guru',
+    render: (c) => renderExternalApp(c, {
+      name: 'Temporizadores Web', icon: '⏱️', color: 'var(--amber)',
+      appUrl: 'https://timer.guru',
+      desc: 'Herramientas de tiempo online para sesiones Pomodoro, cuenta regresiva y cronómetro.',
+      quicklinks: [
+        { label: 'Timer 25 min (Pomodoro)', url: 'https://timer.guru/en/?minutes=25', icon: '🍅' },
+        { label: 'Timer 50 min (Deep)', url: 'https://timer.guru/en/?minutes=50', icon: '🧠' },
+        { label: 'Cronómetro', url: 'https://www.online-stopwatch.com/countdown-timer/', icon: '⏱️' },
+        { label: 'Countdown (examen)', url: 'https://www.timeanddate.com/timer/', icon: '⏰' },
+        { label: 'Pomodoro clásico', url: 'https://pomofocus.io', icon: '🍅' },
+      ],
+      tips: [
+        'Combina con Spotify Focus Flow para máxima concentración',
+        'Pon el timer en pantalla dividida junto a tu material de estudio',
+        'Pomofocus.io tiene listas de tareas integradas con el timer',
+      ],
+    }),
+  },
+  {
+    id: 'ext-canva',
+    name: 'Canva',
+    desc: 'Diseño gráfico fácil para presentaciones, infografías, carteles y trabajos escolares.',
+    icon: '🎨',
+    type: 'external',
+    tabLabel: '🎨 Canva',
+    tabId: 'ext-canva',
+    color: 'purple',
+    author: 'Canva Pty Ltd',
+    render: (c) => renderExternalApp(c, {
+      name: 'Canva', icon: '🎨', color: 'var(--purple)',
+      appUrl: 'https://www.canva.com',
+      desc: 'Crea presentaciones, infografías y carteles profesionales con arrastrar y soltar.',
+      quicklinks: [
+        { label: 'Inicio', url: 'https://www.canva.com', icon: '🏠' },
+        { label: 'Nueva presentación', url: 'https://www.canva.com/create/presentations/', icon: '🎞️' },
+        { label: 'Nueva infografía', url: 'https://www.canva.com/create/infographics/', icon: '📊' },
+        { label: 'Nuevo cartel', url: 'https://www.canva.com/create/posters/', icon: '🖼️' },
+        { label: 'Mis diseños', url: 'https://www.canva.com/projects', icon: '📁' },
+      ],
+      tips: [
+        'Busca "student presentation" para plantillas académicas gratis',
+        'Canva Edu es gratis con correo institucional',
+        'Exporta en PDF para entregar trabajos con diseño profesional',
+      ],
+    }),
+  },
+  {
+    id: 'ext-grammarly',
+    name: 'Grammarly',
+    desc: 'Corrector de gramática y ortografía en inglés con sugerencias de estilo en tiempo real.',
+    icon: '✍️',
+    type: 'external',
+    tabLabel: '✍️ Grammarly',
+    tabId: 'ext-grammarly',
+    color: 'emerald',
+    author: 'Grammarly Inc.',
+    render: (c) => renderExternalApp(c, {
+      name: 'Grammarly', icon: '✍️', color: 'var(--emerald)',
+      appUrl: 'https://app.grammarly.com',
+      desc: 'Corrige tu inglés escrito automáticamente: gramática, puntuación, claridad y tono.',
+      quicklinks: [
+        { label: 'Editor', url: 'https://app.grammarly.com', icon: '✍️' },
+        { label: 'Nuevo documento', url: 'https://app.grammarly.com/ddocs/new', icon: '➕' },
+        { label: 'Extensión Chrome', url: 'https://www.grammarly.com/browser/chrome', icon: '🔧' },
+      ],
+      tips: [
+        'Pega tu composición de inglés y corrige antes de entregar',
+        'La extensión Chrome corrige en tiempo real en Google Docs',
+        'Revisa no solo los errores sino también las sugerencias de claridad',
+      ],
+    }),
+  },
+  {
+    id: 'ext-ejercicios',
+    name: 'Ejercicios.net',
+    desc: 'Ejercicios interactivos de Matemáticas, Física, Química y más para secundaria.',
+    icon: '📝',
+    type: 'external',
+    tabLabel: '📝 Ejercicios',
+    tabId: 'ext-ejercicios',
+    color: 'amber',
+    author: 'Ejercicios.net',
+    render: (c) => renderExternalApp(c, {
+      name: 'Ejercicios.net', icon: '📝', color: 'var(--amber)',
+      appUrl: 'https://www.ejercicios.net',
+      desc: 'Banco de ejercicios resueltos de Matemáticas, Física, Química y Biología para bachillerato.',
+      quicklinks: [
+        { label: 'Matemáticas', url: 'https://www.ejercicios.net/matematicas/', icon: '📐' },
+        { label: 'Química', url: 'https://www.ejercicios.net/quimica/', icon: '⚗️' },
+        { label: 'Física', url: 'https://www.ejercicios.net/fisica/', icon: '⚡' },
+        { label: 'Biología', url: 'https://www.ejercicios.net/biologia/', icon: '🔬' },
+      ],
+      tips: [
+        'Intenta resolver el ejercicio antes de ver la solución',
+        'Usa los ejercicios para preparar exámenes al día siguiente',
+        'Copia los más difíciles en tu Anki para repasar después',
+      ],
+    }),
+  },
+  {
+    id: 'ext-drive',
+    name: 'Google Drive',
+    desc: 'Almacena, organiza y comparte todos tus archivos escolares en la nube.',
+    icon: '☁️',
+    type: 'external',
+    tabLabel: '☁️ Drive',
+    tabId: 'ext-drive',
+    color: 'amber',
+    author: 'Google',
+    render: (c) => renderExternalApp(c, {
+      name: 'Google Drive', icon: '☁️', color: 'var(--amber)',
+      appUrl: 'https://drive.google.com',
+      desc: 'Guarda todos tus apuntes, tareas y proyectos en la nube con 15 GB gratis.',
+      quicklinks: [
+        { label: 'Mi unidad', url: 'https://drive.google.com/drive/my-drive', icon: '📁' },
+        { label: 'Compartidos', url: 'https://drive.google.com/drive/shared-with-me', icon: '👥' },
+        { label: 'Recientes', url: 'https://drive.google.com/drive/recent', icon: '🕐' },
+        { label: 'Nueva carpeta', url: 'https://drive.google.com/drive/my-drive', icon: '📂' },
+        { label: 'Subir archivo', url: 'https://drive.google.com/drive/my-drive', icon: '⬆️' },
+      ],
+      tips: [
+        'Organiza por carpetas: una por materia y una por año',
+        'Comparte carpetas con tus compañeros en lugar de enviar archivos',
+        'Clic derecho → "Disponible sin conexión" para acceder sin internet',
+      ],
+    }),
+  },
+];
+
+
+// ── ESTADO DE EXTENSIONES INSTALADAS ──
+let installedExtensions = new Set();
+
+function saveExtensions() {
+  try { localStorage.setItem('nexus_extensions', JSON.stringify([...installedExtensions])); } catch(e){}
+}
+function loadExtensions() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('nexus_extensions') || '[]');
+    installedExtensions = new Set(saved);
+  } catch(e){ installedExtensions = new Set(); }
+}
+
+// ── MARKETPLACE UI ──
+function openMarketplace() {
+  document.getElementById('mkt-overlay').classList.add('open');
+  renderMarketplace('all');
+}
+function closeMarketplace() {
+  document.getElementById('mkt-overlay').classList.remove('open');
+}
+
+function filterMkt(type, btn) {
+  document.querySelectorAll('.mkt-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketplace(type);
+}
+
+function renderMarketplace(filter) {
+  const grid = document.getElementById('mkt-grid');
+  const list = filter === 'installed'
+    ? EXTENSION_CATALOG.filter(e => installedExtensions.has(e.id))
+    : filter === 'all'
+      ? EXTENSION_CATALOG
+      : EXTENSION_CATALOG.filter(e => e.type === filter);
+
+  const colorMap = {cyan:'#00DCFF', purple:'#B44FFF', emerald:'#00E5A0', amber:'#FFB830'};
+
+  grid.innerHTML = list.length === 0
+    ? `<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:1px;">// NO HAY EXTENSIONES EN ESTA CATEGORÍA</div>`
+    : list.map(ext => {
+      const installed = installedExtensions.has(ext.id);
+      return `
+        <div class="mkt-card">
+          <div class="mkt-card-banner" style="background:${colorMap[ext.color]||'#00DCFF'};opacity:0.7;"></div>
+          ${installed ? '<div class="mkt-installed-badge">✓ INSTALADO</div>' : ''}
+          <div class="mkt-card-body">
+            <div class="mkt-card-top">
+              <div class="mkt-card-icon">${ext.icon}</div>
+              <div class="mkt-card-badge ${ext.type==='tab'?'mkt-badge-tab':ext.type==='external'?'mkt-badge-external':'mkt-badge-widget'}">${ext.type==='tab'?'PESTAÑA':ext.type==='external'?'APP REAL':'WIDGET'}</div>
+            </div>
+            <div class="mkt-card-name">${ext.name}</div>
+            <div class="mkt-card-desc">${ext.desc}</div>
+            <div class="mkt-card-meta">
+              <div class="mkt-card-author">${ext.author}</div>
+              <button class="mkt-install-btn ${installed?'remove':'install'}" onclick="toggleExtension('${ext.id}')">
+                ${installed ? '− DESINSTALAR' : '+ INSTALAR'}
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+  const count = installedExtensions.size;
+  document.getElementById('mkt-installed-count').textContent =
+    `${count} extensión${count !== 1 ? 'es' : ''} instalada${count !== 1 ? 's' : ''}`;
+}
+
+function toggleExtension(id) {
+  if (installedExtensions.has(id)) {
+    installedExtensions.delete(id);
+  } else {
+    installedExtensions.add(id);
+  }
+  saveExtensions();
+  applyExtensions();
+  // Re-render el marketplace en el filtro actual
+  const activeFilter = document.querySelector('.mkt-filter-btn.active');
+  const filter = activeFilter ? (activeFilter.dataset.filter || 'all') : 'all';
+  renderMarketplace(filter);
+}
+
+// ── APLICAR EXTENSIONES AL DOM ──
+function applyExtensions() {
+  // Limpiar widgets previos
+  document.getElementById('ext-widgets-container').innerHTML = '';
+  // Limpiar tabs de extensiones (no las originales)
+  document.getElementById('ext-tabs-container').innerHTML = '';
+  document.querySelectorAll('.tab-btn-ext').forEach(b => b.remove());
+
+  // Actualizar bottom nav dinámico
+  const bottomNavItems = document.querySelector('.bottom-nav .nav-items');
+  bottomNavItems.querySelectorAll('.nav-item-ext').forEach(n => n.remove());
+
+  EXTENSION_CATALOG.forEach(ext => {
+    if (!installedExtensions.has(ext.id)) return;
+
+    if (ext.type === 'widget') {
+      const wrapper = document.createElement('div');
+      wrapper.id = `ext-widget-${ext.id}`;
+      document.getElementById('ext-widgets-container').appendChild(wrapper);
+      ext.render(wrapper);
+    }
+
+    if (ext.type === 'tab' || ext.type === 'external') {
+      // Agregar botón en nav-tabs
+      const tabsNav = document.getElementById('nav-tabs');
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn tab-btn-ext';
+      btn.setAttribute('onclick', `switchTab('${ext.tabId}')`);
+      btn.textContent = ext.tabLabel;
+      tabsNav.appendChild(btn);
+
+      // Agregar en bottom nav
+      const navItem = document.createElement('div');
+      navItem.className = 'nav-item nav-item-ext';
+      navItem.setAttribute('onclick', `switchTab('${ext.tabId}');setNavActive(this)`);
+      navItem.textContent = ext.tabLabel;
+      bottomNavItems.appendChild(navItem);
+
+      // Crear tab content
+      const tabContainer = document.getElementById('ext-tabs-container');
+      const tabDiv = document.createElement('div');
+      tabDiv.id = `tab-${ext.tabId}`;
+      tabDiv.className = 'tab-content';
+      tabContainer.appendChild(tabDiv);
+      ext.render(tabDiv);
+    }
+  });
+}
+
+function initExtensions() {
+  loadExtensions();
+  applyExtensions();
+}
+
+// ════════════════════════════
+// ══  RENDERS DE EXTENSIONES  ══
+// ════════════════════════════
+
+// ── WIDGET: NOTAS RÁPIDAS ──
+let quickNotes = [];
+function renderQuickNotes(container) {
+  try { quickNotes = JSON.parse(localStorage.getItem('nexus_qnotes') || '[]'); } catch(e){}
+  container.innerHTML = `
+    <div class="quick-notes-widget">
+      <div class="qn-title">// NOTAS RÁPIDAS</div>
+      <div class="qn-list" id="qn-list">
+        ${quickNotes.map((n,i) => `
+          <div class="qn-item">
+            <div class="qn-item-text">${n}</div>
+            <button class="qn-del" onclick="deleteNote(${i})">✕</button>
+          </div>`).join('') || '<div style="font-size:11px;color:var(--text-muted);padding:4px 0;">Sin notas aún...</div>'}
+      </div>
+      <div class="qn-input-row">
+        <input class="qn-input" id="qn-input" placeholder="Nueva nota..." onkeydown="if(event.key==='Enter')addNote()">
+        <button class="qn-add-btn" onclick="addNote()">+ AÑADIR</button>
+      </div>
+    </div>`;
+}
+function addNote() {
+  const input = document.getElementById('qn-input');
+  if (!input || !input.value.trim()) return;
+  quickNotes.push(input.value.trim());
+  input.value = '';
+  localStorage.setItem('nexus_qnotes', JSON.stringify(quickNotes));
+  const w = document.getElementById('ext-widget-quick-notes');
+  if(w) renderQuickNotes(w);
+}
+function deleteNote(i) {
+  quickNotes.splice(i, 1);
+  localStorage.setItem('nexus_qnotes', JSON.stringify(quickNotes));
+  const w = document.getElementById('ext-widget-quick-notes');
+  if(w) renderQuickNotes(w);
+}
+
+// ── WIDGET: HIDRATACIÓN ──
+let waterGlasses = 0;
+function renderWaterTracker(container) {
+  try { waterGlasses = parseInt(localStorage.getItem('nexus_water') || '0'); } catch(e){}
+  const glasses = Array.from({length:8}, (_,i) => `
+    <div class="water-glass ${i < waterGlasses ? 'filled' : ''}" onclick="toggleGlass(${i})">
+      <div class="fill"></div>
+    </div>`).join('');
+  container.innerHTML = `
+    <div class="water-widget">
+      <div class="water-title">// HIDRATACIÓN DIARIA</div>
+      <div class="water-glasses" id="water-glasses">${glasses}</div>
+      <div class="water-info">
+        <div class="water-ml">${waterGlasses * 250}<span class="macro-unit"> ml</span></div>
+        <div class="water-goal">META: 2000 ml / 8 vasos</div>
+      </div>
+    </div>`;
+}
+function toggleGlass(i) {
+  waterGlasses = (i < waterGlasses) ? i : i + 1;
+  localStorage.setItem('nexus_water', String(waterGlasses));
+  const w = document.getElementById('ext-widget-water-tracker');
+  if(w) renderWaterTracker(w);
+}
+
+// ── WIDGET: CALCULADORA GPA ──
+let gpaSubjects = [{name:'Matemáticas',nota:'',creditos:'3'},{name:'Química',nota:'',creditos:'3'},{name:'Biología',nota:'',creditos:'2'}];
+function renderGpaCalc(container) {
+  try { gpaSubjects = JSON.parse(localStorage.getItem('nexus_gpa') || JSON.stringify(gpaSubjects)); } catch(e){}
+  const avg = calcGpa();
+  container.innerHTML = `
+    <div class="gpa-widget">
+      <div class="gpa-title">// CALCULADORA DE PROMEDIO</div>
+      <div style="display:grid;grid-template-columns:1fr 80px 80px 28px;gap:6px;margin-bottom:4px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;">MATERIA</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;">NOTA</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;">CRÉD.</div>
+        <div></div>
+      </div>
+      <div class="gpa-rows">
+        ${gpaSubjects.map((s,i) => `
+          <div class="gpa-row">
+            <input class="gpa-input" value="${s.name}" placeholder="Materia" oninput="updateGpaField(${i},'name',this.value)">
+            <input class="gpa-input" value="${s.nota}" placeholder="0-100" type="number" min="0" max="100" oninput="updateGpaField(${i},'nota',this.value)">
+            <input class="gpa-input" value="${s.creditos}" placeholder="Créd." type="number" min="1" max="6" oninput="updateGpaField(${i},'creditos',this.value)">
+            <button class="gpa-del" onclick="removeGpaRow(${i})">✕</button>
+          </div>`).join('')}
+      </div>
+      <div class="gpa-actions">
+        <button class="gpa-btn" onclick="addGpaRow()">+ MATERIA</button>
+      </div>
+      <div class="gpa-result">${avg > 0 ? avg.toFixed(1) : '—'}</div>
+      <div class="gpa-label">PROMEDIO PONDERADO ${avg >= 70 ? '· ✓ APROBADO' : avg > 0 ? '· ✗ EN RIESGO' : ''}</div>
+    </div>`;
+}
+function calcGpa() {
+  let total = 0, credits = 0;
+  gpaSubjects.forEach(s => { if(s.nota !== '' && s.creditos) { total += parseFloat(s.nota||0) * parseFloat(s.creditos); credits += parseFloat(s.creditos); }});
+  return credits > 0 ? total / credits : 0;
+}
+function updateGpaField(i, field, val) {
+  gpaSubjects[i][field] = val;
+  localStorage.setItem('nexus_gpa', JSON.stringify(gpaSubjects));
+  const r = document.querySelector('#ext-widget-gpa-calc .gpa-result');
+  const l = document.querySelector('#ext-widget-gpa-calc .gpa-label');
+  if(r) { const avg = calcGpa(); r.textContent = avg > 0 ? avg.toFixed(1) : '—'; if(l) l.textContent = `PROMEDIO PONDERADO ${avg >= 70 ? '· ✓ APROBADO' : avg > 0 ? '· ✗ EN RIESGO' : ''}`; }
+}
+function addGpaRow() {
+  gpaSubjects.push({name:'',nota:'',creditos:'3'});
+  localStorage.setItem('nexus_gpa', JSON.stringify(gpaSubjects));
+  const w = document.getElementById('ext-widget-gpa-calc');
+  if(w) renderGpaCalc(w);
+}
+function removeGpaRow(i) {
+  gpaSubjects.splice(i,1);
+  localStorage.setItem('nexus_gpa', JSON.stringify(gpaSubjects));
+  const w = document.getElementById('ext-widget-gpa-calc');
+  if(w) renderGpaCalc(w);
+}
+
+// ── WIDGET: MÚSICA FOCUS ──
+const MUSIC_TRACKS = [
+  {name:'Lluvia suave', dur:'∞', icon:'🌧', url:'https://mynoise.net/NoiseMachines/rainNoiseGenerator.php'},
+  {name:'Café con ambiente', dur:'∞', icon:'☕', url:'https://mynoise.net/NoiseMachines/cafeRestaurantNoiseGenerator.php'},
+  {name:'Bosque nocturno', dur:'∞', icon:'🌲', url:'https://mynoise.net/NoiseMachines/jungleNoiseGenerator.php'},
+  {name:'Ruido blanco', dur:'∞', icon:'〰', url:'https://mynoise.net/NoiseMachines/whiteNoiseGenerator.php'},
+  {name:'Lo-fi Hip Hop', dur:'∞', icon:'🎧', url:'https://www.youtube.com/results?search_query=lofi+hip+hop+study'},
+];
+let activeTrack = null;
+function renderMusicFocus(container) {
+  container.innerHTML = `
+    <div class="music-widget">
+      <div class="music-title">// MÚSICA FOCUS</div>
+      <div class="music-tracks">
+        ${MUSIC_TRACKS.map((t,i) => `
+          <div class="music-track ${activeTrack===i?'active':''}" onclick="selectTrack(${i})">
+            <div class="music-track-icon">${t.icon}</div>
+            <div class="music-track-name">${t.name}</div>
+            <div class="music-track-dur">${t.dur}</div>
+          </div>`).join('')}
+      </div>
+      <div class="music-controls">
+        <div class="music-now" id="music-now">${activeTrack !== null ? MUSIC_TRACKS[activeTrack].name : 'Selecciona un ambiente...'}</div>
+        <button class="music-ctrl-btn ${activeTrack!==null?'active':''}" onclick="openTrackLink()" title="Abrir en nueva pestaña">▶ ABRIR</button>
+      </div>
+    </div>`;
+}
+function selectTrack(i) {
+  activeTrack = i;
+  const w = document.getElementById('ext-widget-music-focus');
+  if(w) renderMusicFocus(w);
+}
+function openTrackLink() {
+  if(activeTrack === null) return;
+  window.open(MUSIC_TRACKS[activeTrack].url, '_blank');
+}
+
+// ── TAB: METAS ──
+let goals = [];
+function renderGoalsTab(container) {
+  try { goals = JSON.parse(localStorage.getItem('nexus_goals') || '[]'); } catch(e){}
+  const colorMap = {0:'var(--red-alert)',50:'var(--amber)',70:'var(--cyan)',100:'var(--emerald)'};
+  const getColor = pct => pct >= 100 ? colorMap[100] : pct >= 70 ? colorMap[70] : pct >= 50 ? colorMap[50] : colorMap[0];
+  container.innerHTML = `
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-title-dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber);"></div>METAS Y OBJETIVOS</div>
+      </div>
+      <div class="panel-body">
+        <div class="goals-grid" id="goals-grid">
+          ${goals.length === 0 ? `<div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:1px;">// SIN METAS AÚN — AGREGA UNA ABAJO</div>` :
+            goals.map((g,i) => `
+              <div class="goal-card">
+                <div class="goal-header">
+                  <div class="goal-name">${g.name}</div>
+                  <div class="goal-pct" style="color:${getColor(g.pct)}">${g.pct}%</div>
+                </div>
+                <div class="goal-bar-bg"><div class="goal-bar" style="width:${g.pct}%;background:${getColor(g.pct)};"></div></div>
+                <div class="goal-desc">${g.desc}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div class="goal-deadline">📅 ${g.deadline}</div>
+                  <div style="display:flex;gap:6px;">
+                    <input type="range" min="0" max="100" value="${g.pct}" style="width:80px;" oninput="updateGoalPct(${i},this.value)">
+                    <button onclick="removeGoal(${i})" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;">✕</button>
+                  </div>
+                </div>
+              </div>`).join('')}
+        </div>
+        <div class="goals-add-form">
+          <div class="goals-add-title">// NUEVA META</div>
+          <div class="goals-form-grid">
+            <input class="goals-input" id="goal-name" placeholder="Nombre de la meta...">
+            <input class="goals-input" id="goal-desc" placeholder="Descripción...">
+            <input class="goals-input" id="goal-deadline" placeholder="Fecha" type="date">
+          </div>
+          <button class="goals-submit" onclick="addGoal()">+ AGREGAR META</button>
+        </div>
+      </div>
+    </div>`;
+}
+function addGoal() {
+  const name = document.getElementById('goal-name')?.value?.trim();
+  const desc = document.getElementById('goal-desc')?.value?.trim();
+  const deadline = document.getElementById('goal-deadline')?.value || 'Sin fecha';
+  if(!name) return;
+  goals.push({name, desc: desc || '—', deadline, pct: 0});
+  localStorage.setItem('nexus_goals', JSON.stringify(goals));
+  // Limpiar campos del formulario
+  const nameEl = document.getElementById('goal-name');
+  const descEl = document.getElementById('goal-desc');
+  const deadlineEl = document.getElementById('goal-deadline');
+  if(nameEl) nameEl.value = '';
+  if(descEl) descEl.value = '';
+  if(deadlineEl) deadlineEl.value = '';
+  const t = document.getElementById('tab-goals');
+  if(t) renderGoalsTab(t);
+}
+function removeGoal(i) {
+  goals.splice(i,1);
+  localStorage.setItem('nexus_goals', JSON.stringify(goals));
+  const t = document.getElementById('tab-goals');
+  if(t) renderGoalsTab(t);
+}
+function updateGoalPct(i, val) {
+  goals[i].pct = parseInt(val);
+  localStorage.setItem('nexus_goals', JSON.stringify(goals));
+  const t = document.getElementById('tab-goals');
+  if(t) renderGoalsTab(t);
+}
+
+// ── TAB: NUTRICIÓN ──
+const NUTRITION_DATA = {
+  cals: 2400, calMeta: 2800,
+  protein: 145, protMeta: 175,
+  carbs: 280, carbMeta: 350,
+  fat: 72, fatMeta: 90,
+  meals: [
+    {name:'Desayuno 4AM', kcal: 450, items:['Huevos revueltos (3)','Avena con leche','Banana','Café negro']},
+    {name:'Desayuno 6AM', kcal: 380, items:['Tortillas con frijoles','Queso','Jugo natural']},
+    {name:'Almuerzo', kcal: 720, items:['Arroz integral','Pollo asado','Ensalada','Frijoles']},
+    {name:'Merienda', kcal: 280, items:['Yogur griego','Granola','Manzana']},
+    {name:'Cena', kcal: 570, items:['Pasta integral','Atún','Vegetales salteados']},
+  ]
+};
+function renderNutritionTab(container) {
+  const d = NUTRITION_DATA;
+  container.innerHTML = `
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-title-dot" style="background:var(--emerald);box-shadow:0 0 8px var(--emerald);"></div>PLAN NUTRICIONAL DIARIO</div>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-muted);">BASADO EN PERFIL HROS · CTP PAVAS</span>
+      </div>
+      <div class="panel-body">
+        <div class="nutri-macros">
+          ${[
+            {label:'CALORÍAS', val:d.cals, meta:d.calMeta, unit:'kcal', color:'var(--amber)'},
+            {label:'PROTEÍNA', val:d.protein, meta:d.protMeta, unit:'g', color:'var(--cyan)'},
+            {label:'CARBOS', val:d.carbs, meta:d.carbMeta, unit:'g', color:'var(--purple)'},
+            {label:'GRASA', val:d.fat, meta:d.fatMeta, unit:'g', color:'var(--emerald)'},
+          ].map(m => `
+            <div class="macro-card">
+              <div class="macro-label">${m.label}</div>
+              <div class="macro-val" style="color:${m.color}">${m.val}<span class="macro-unit">${m.unit}</span></div>
+              <div class="macro-bar-bg"><div class="macro-bar" style="width:${Math.min(100,m.val/m.meta*100).toFixed(0)}%;background:${m.color};"></div></div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:4px;">META: ${m.meta}${m.unit}</div>
+            </div>`).join('')}
+        </div>
+        <div class="nutri-meals">
+          ${d.meals.map(m => `
+            <div class="meal-card">
+              <div class="meal-header">
+                <div class="meal-name">${m.name}</div>
+                <div class="meal-kcal">${m.kcal} kcal</div>
+              </div>
+              <div class="meal-items">
+                ${m.items.map(item => `<div class="meal-tag">${item}</div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── TAB: IDEAS MENTALES ──
+let mindItems = [];
+function renderMindmapTab(container) {
+  try { mindItems = JSON.parse(localStorage.getItem('nexus_mind') || '[]'); } catch(e){}
+  const categories = ['Idea', 'Pregunta', 'Conexión', 'Pendiente'];
+  const catColors = {'Idea':'var(--cyan)','Pregunta':'var(--purple)','Conexión':'var(--emerald)','Pendiente':'var(--amber)'};
+  container.innerHTML = `
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-title-dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple);"></div>IDEAS Y CONEXIONES MENTALES</div>
+      </div>
+      <div class="panel-body">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <input id="mind-text" class="goals-input" style="flex:1;min-width:200px;" placeholder="Nueva idea, pregunta o conexión...">
+          <select id="mind-cat" class="goals-input" style="width:130px;">
+            ${categories.map(c=>`<option>${c}</option>`).join('')}
+          </select>
+          <button class="goals-submit" onclick="addMindItem()">+ AGREGAR</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${mindItems.length === 0
+            ? `<div style="text-align:center;padding:30px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:1px;">// SIN IDEAS AÚN — AGREGA LA PRIMERA ARRIBA</div>`
+            : mindItems.map((m,i) => `
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--carbon-light);border:1px solid var(--border);border-left:3px solid ${catColors[m.cat]||'var(--cyan)'};border-radius:6px;">
+                <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:${catColors[m.cat]||'var(--cyan)'};letter-spacing:1px;width:72px;flex-shrink:0;">${m.cat.toUpperCase()}</div>
+                <div style="flex:1;font-size:12px;color:var(--text-secondary);">${m.text}</div>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-muted);">${m.date}</div>
+                <button onclick="removeMindItem(${i})" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;transition:color 0.2s;" onmouseover="this.style.color='var(--red-alert)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
+              </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+function addMindItem() {
+  const textEl = document.getElementById('mind-text');
+  const text = textEl?.value?.trim();
+  const cat = document.getElementById('mind-cat')?.value || 'Idea';
+  if(!text) return;
+  const now = new Date();
+  mindItems.unshift({text, cat, date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}`});
+  if(textEl) textEl.value = '';
+  localStorage.setItem('nexus_mind', JSON.stringify(mindItems));
+  const t = document.getElementById('tab-mindmap');
+  if(t) renderMindmapTab(t);
+}
+function removeMindItem(i) {
+  mindItems.splice(i,1);
+  localStorage.setItem('nexus_mind', JSON.stringify(mindItems));
+  const t = document.getElementById('tab-mindmap');
+  if(t) renderMindmapTab(t);
+}
+
+// ── APP REAL: RENDER GENÉRICO ──
+function renderExternalApp(container, cfg) {
+  const colorHex = {'var(--cyan)':'#00DCFF','var(--emerald)':'#00E5A0','var(--purple)':'#B44FFF','var(--amber)':'#FFB830','var(--red-alert)':'#FF4560'};
+  const hex = colorHex[cfg.color] || '#00DCFF';
+  container.innerHTML = `
+    <div class="ext-app-widget" style="border-color:${hex}22;">
+      <div class="ext-app-header" style="border-bottom-color:${hex}22;">
+        <div class="ext-app-title" style="color:${cfg.color};">
+          <span style="font-size:18px;">${cfg.icon}</span>
+          ${cfg.name.toUpperCase()}
+        </div>
+        <a class="ext-app-open-btn" href="${cfg.appUrl}" target="_blank" rel="noopener" style="border-color:${hex}55;color:${cfg.color};">
+          ↗ ABRIR
+        </a>
+      </div>
+      <div style="padding:12px 14px 4px;font-size:11px;color:var(--text-secondary);">${cfg.desc}</div>
+      <div class="ext-app-quicklinks">
+        ${cfg.quicklinks.map(q => `
+          <a class="ext-quicklink" href="${q.url}" target="_blank" rel="noopener">
+            <span class="ext-quicklink-icon">${q.icon}</span>
+            ${q.label}
+          </a>`).join('')}
+      </div>
+      <div style="padding:10px 14px;border-top:1px solid var(--border);">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--text-muted);margin-bottom:8px;">// CONSEJOS RÁPIDOS</div>
+        ${cfg.tips.map(t => `
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:11px;color:var(--text-secondary);">
+            <span style="color:${cfg.color};flex-shrink:0;">▸</span>${t}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── INIT EXTENSIONES (al final, después de todas las declaraciones) ──
+initExtensions();
+</script>
+</body>
+</html>
